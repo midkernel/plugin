@@ -1,3 +1,5 @@
+import { repoRefSchema } from "./schemas.js";
+
 /**
  * Read-only GitHub App — STUB until IT wires OAuth + scopes.
  *
@@ -49,24 +51,17 @@ export function listInstallationRepos(): GitHubAppListResult {
 }
 
 export function selectRepo(owner: string, name: string): GitHubAppSelectResult {
-  const cleanedOwner = owner.trim();
-  const cleanedName = name.trim();
-  if (!cleanedOwner || !cleanedName) {
-    throw new Error("owner and name are required to select a repository");
-  }
+  const selected = repoRefSchema.parse({ owner, name });
 
   return {
     stubbed: true,
     mock: true,
-    selected: { owner: cleanedOwner, name: cleanedName },
+    selected,
     verified: false,
     note: `${GITHUB_APP_STUB_NOTE} Selection is recorded for this MCP session only; the App did not verify access.`,
   };
 }
 
 export function parseOwnerName(owner: unknown, name: unknown): GitHubRepoRef {
-  if (typeof owner !== "string" || typeof name !== "string") {
-    throw new Error("owner and name must be strings");
-  }
-  return { owner: owner.trim(), name: name.trim() };
+  return repoRefSchema.parse({ owner, name });
 }

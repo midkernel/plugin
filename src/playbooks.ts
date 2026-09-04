@@ -1,3 +1,5 @@
+import { githubContentsSchema, githubDirSchema, type GithubContents } from "./schemas.js";
+
 export const DEFAULT_PLAYBOOKS_REPO_URL = "https://github.com/midkernel/playbooks";
 export const DEFAULT_PLAYBOOKS_CONTENTS_URL =
   "https://api.github.com/repos/midkernel/playbooks/contents";
@@ -26,14 +28,6 @@ export type FetchLike = (input: string, init?: { headers?: Record<string, string
   json: () => Promise<unknown>;
 }>;
 
-type GithubContentItem = {
-  type?: string;
-  name?: string;
-  path?: string;
-  html_url?: string;
-  url?: string;
-};
-
 function isShellName(name: string): boolean {
   return SHELL_BASENAMES.has(name.toLowerCase());
 }
@@ -44,8 +38,8 @@ function hasPlaybookExtension(name: string): boolean {
   return PLAYBOOK_EXTENSIONS.has(name.slice(dot).toLowerCase());
 }
 
-function asItems(value: unknown): GithubContentItem[] {
-  return Array.isArray(value) ? (value as GithubContentItem[]) : [];
+function parseContents(value: unknown) {
+  return githubContentsSchema.parse(value);
 }
 
 export async function listPlaybooks(options?: {
@@ -99,7 +93,7 @@ async function walkContents(
   fetchFn: FetchLike,
   url: string,
   depth: number,
-): Promise<GithubContentItem[]> {
+): Promise<GithubContents> {
   if (depth > 3) return [];
 
   const response = await fetchFn(url, {
@@ -113,19 +107,19 @@ async function walkContents(
     throw new Error(`GitHub contents HTTP ${response.status}`);
   }
 
-  const items = asItems(await response.json());
-  const collected: GithubContentItem[] = [];
+  const items = parseContents(await response.json());
+  const collected: GithubContents = [];
 
   for (const item of items) {
     if (item.type === "file") {
       collected.push(item);
       continue;
     }
-    if (item.type === "dir" && typeof item.url === "string") {
-      const name = (item.name ?? "").toLowerCase();
-      if (name === "playbooks" || name === "workflows" || name === "registry") {
-        collected.push(...(await walkContents(fetchFn, item.url, depth + 1)));
-      }
+    const dir = githubDirSchema.safeParse(item);
+    if (!dir.success) continue;
+    const name = (dir.data.name ?? "").toLowerCase();
+    if (name === "playbooks" || name === "workflows" || name === "registry") {
+      collected.push(...(await walkContents(fetchFn, dir.data.url, depth + 1)));
     }
   }
 

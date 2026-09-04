@@ -1,15 +1,9 @@
+import { z } from "zod";
 import { ErrorCode, RUN_BACKEND_MESSAGE, SCAN_INFRA_MESSAGE } from "./errors.js";
 import type { GitHubRepoRef } from "./github-app.js";
-import { describeThreatPin, parseProfile, type ScanProfile } from "./profiles.js";
+import type { ScanProfile } from "./profiles.js";
+import { fetchRunSchema, startRunSchema } from "./schemas.js";
 import type { SessionStore } from "./session.js";
-
-export type StartRunInput = {
-  profile: unknown;
-  threat?: unknown;
-  owner?: unknown;
-  name?: unknown;
-  playbook?: unknown;
-};
 
 export type CreditMeter = {
   meters: true;
@@ -31,10 +25,6 @@ export type StartRunFailure = {
   credits: CreditMeter;
 };
 
-export type FetchRunInput = {
-  runId?: unknown;
-};
-
 export type FetchRunFailure = {
   ok: false;
   error: typeof ErrorCode.SCAN_INFRA_UNAVAILABLE | typeof ErrorCode.RUN_NOT_FOUND;
@@ -45,45 +35,51 @@ export type FetchRunFailure = {
 const CREDITS_NOTE =
   "Credits meter hosted Scan runs. This call did not start a run and did not spend credits. Stripe is not implemented in this plugin.";
 
-function asOptionalString(value: unknown): string | undefined {
-  if (value === undefined || value === null) return undefined;
-  if (typeof value !== "string") return undefined;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
+const fakeSuccessSchema = z
+  .object({
+    ok: z.literal(true).optional(),
+    status: z.enum(["succeeded", "success", "queued", "running"]).optional(),
+    runId: z.string().min(1).optional(),
+    jobId: z.string().min(1).optional(),
+    externalAgentflowId: z.string().min(1).optional(),
+    agentflowId: z.string().min(1).optional(),
+    findings: z.array(z.unknown()).optional(),
+    report: z.record(z.unknown()).optional(),
+  })
+  .passthrough();
+
+function credits(): CreditMeter {
+  return { meters: true, spent: false, note: CREDITS_NOTE };
 }
 
-export function startRun(input: StartRunInput, session?: SessionStore): StartRunFailure {
-  let profile: ScanProfile;
-  try {
-    profile = parseProfile(input.profile);
-  } catch (error) {
+function startRunParseError(error: z.ZodError): StartRunFailure {
+  const profileIssue = error.issues.find((issue) => issue.path[0] === "profile");
+  if (profileIssue) {
     return {
       ok: false,
       error: ErrorCode.INVALID_PROFILE,
-      message: error instanceof Error ? error.message : String(error),
-      credits: { meters: true, spent: false, note: CREDITS_NOTE },
+      message: profileIssue.message,
+      credits: credits(),
     };
   }
 
-  const threat = describeThreatPin(asOptionalString(input.threat));
-  const owner = asOptionalString(input.owner);
-  const name = asOptionalString(input.name);
-  const selected = session?.getSelectedRepo() ?? null;
+  return {
+    ok: false,
+    error: ErrorCode.INVALID_REPO,
+    message: error.issues[0]?.message ?? "Invalid start_run input.",
+    credits: credits(),
+  };
+}
 
-  let repo: GitHubRepoRef | null = null;
-  if (owner || name) {
-    if (!owner || !name) {
-      return {
-        ok: false,
-        error: ErrorCode.INVALID_REPO,
-        message: "To target a repo, pass both owner and name (or select one with connect_repo first).",
-        credits: { meters: true, spent: false, note: CREDITS_NOTE },
-      };
-    }
-    repo = { owner, name };
-  } else if (selected) {
-    repo = selected;
+export function startRun(input: unknown, session?: SessionStore): StartRunFailure {
+  const parsed = startRunSchema.safeParse(input);
+  if (!parsed.success) {
+    return startRunParseError(parsed.error);
   }
+
+  const { profile, threat, owner, name, playbook } = parsed.data;
+  const selected = session?.getSelectedRepo() ?? null;
+  const repo = owner && name ? { owner, name } : selected;
 
   return {
     ok: false,
@@ -91,17 +87,27 @@ export function startRun(input: StartRunInput, session?: SessionStore): StartRun
     message: SCAN_INFRA_MESSAGE,
     requested: {
       repo,
-      playbook: asOptionalString(input.playbook) ?? null,
+      playbook: playbook ?? null,
       profile,
-      threat: threat.threat,
+      threat: threat ?? null,
       threatRole: "pin",
     },
-    credits: { meters: true, spent: false, note: CREDITS_NOTE },
+    credits: credits(),
   };
 }
 
-export function fetchRun(input: FetchRunInput = {}): FetchRunFailure {
-  const runId = asOptionalString(input.runId) ?? null;
+export function fetchRun(input: unknown = {}): FetchRunFailure {
+  const parsed = fetchRunSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: ErrorCode.SCAN_INFRA_UNAVAILABLE,
+      message: parsed.error.issues[0]?.message ?? RUN_BACKEND_MESSAGE,
+      runId: null,
+    };
+  }
+
+  const runId = parsed.data.runId ?? null;
 
   if (runId) {
     return {
@@ -121,22 +127,13 @@ export function fetchRun(input: FetchRunInput = {}): FetchRunFailure {
 }
 
 export function looksLikeFakeSuccess(payload: unknown): boolean {
-  if (!payload || typeof payload !== "object") return false;
-  const record = payload as Record<string, unknown>;
-
+  const parsed = fakeSuccessSchema.safeParse(payload);
+  if (!parsed.success) return false;
+  const record = parsed.data;
   if (record.ok === true) return true;
-  if (record.status === "succeeded" || record.status === "success" || record.status === "queued" || record.status === "running") {
-    return true;
-  }
-
-  const forbiddenIds = ["runId", "jobId", "externalAgentflowId", "agentflowId"];
-  for (const key of forbiddenIds) {
-    const value = record[key];
-    if (typeof value === "string" && value.length > 0) return true;
-  }
-
-  if (Array.isArray(record.findings)) return true;
-  if (record.report && typeof record.report === "object") return true;
-
+  if (record.status) return true;
+  if (record.runId || record.jobId || record.externalAgentflowId || record.agentflowId) return true;
+  if (record.findings) return true;
+  if (record.report) return true;
   return false;
 }

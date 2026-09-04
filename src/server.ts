@@ -1,17 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 import { connectRepo } from "./connect.js";
 import { listPlaybooks } from "./playbooks.js";
-import { SCAN_PROFILES } from "./profiles.js";
 import { fetchRun, startRun } from "./scan.js";
+import { connectRepoSchema, fetchRunSchema, listPlaybooksSchema, startRunSchema } from "./schemas.js";
 import { SessionStore } from "./session.js";
 
 export const SERVER_NAME = "midkernel";
 export const SERVER_VERSION = "0.1.0";
 
 export const TOOL_NAMES = ["connect_repo", "list_playbooks", "start_run", "fetch_run"] as const;
-
-const profileSchema = z.enum(SCAN_PROFILES);
 
 function jsonResult(payload: unknown, isError = false) {
   return {
@@ -33,19 +30,10 @@ export function createServer(session = new SessionStore()): McpServer {
         "Connect or select a GitHub repository for Midkernel Scan. " +
         "Pass owner + name to select a repo, or omit both to list repos visible to the read-only GitHub App installation. " +
         "The GitHub App API is stubbed in v0 (IT owns OAuth and scopes).",
-      inputSchema: {
-        owner: z
-          .string()
-          .optional()
-          .describe("GitHub owner / org. Required with name to select a repo."),
-        name: z
-          .string()
-          .optional()
-          .describe("GitHub repository name. Required with owner to select a repo."),
-      },
+      inputSchema: connectRepoSchema,
     },
-    async ({ owner, name }) => {
-      const result = connectRepo({ owner, name }, session);
+    async (args) => {
+      const result = connectRepo(args, session);
       return jsonResult(result, "error" in result);
     },
   );
@@ -56,7 +44,7 @@ export function createServer(session = new SessionStore()): McpServer {
       description:
         "List workflows/playbooks from the public Midkernel registry (https://github.com/midkernel/playbooks). " +
         "If the registry is still a shell, returns an empty list and a note. Does not invent playbooks.",
-      inputSchema: {},
+      inputSchema: listPlaybooksSchema,
     },
     async () => {
       const result = await listPlaybooks();
@@ -72,16 +60,7 @@ export function createServer(session = new SessionStore()): McpServer {
         "threat is an optional pin (threat id or class string), not a fourth profile. " +
         "Credits meter hosted runs — mention credit spend to the user; this plugin does not implement Stripe. " +
         "Hosted execute is not issued: this tool returns SCAN_INFRA_UNAVAILABLE and does not invent job ids.",
-      inputSchema: {
-        profile: profileSchema.describe("Required scan profile. Not interchangeable with threat."),
-        threat: z
-          .string()
-          .optional()
-          .describe("Optional threat pin (id or class). Pins an existing profile; not a fourth profile."),
-        owner: z.string().optional().describe("GitHub owner. Defaults to the repo selected via connect_repo."),
-        name: z.string().optional().describe("GitHub repo name. Defaults to the repo selected via connect_repo."),
-        playbook: z.string().optional().describe("Playbook/workflow id from list_playbooks."),
-      },
+      inputSchema: startRunSchema,
     },
     async (args) => {
       const result = startRun(args, session);
@@ -96,15 +75,10 @@ export function createServer(session = new SessionStore()): McpServer {
         "Fetch status and report for a Midkernel Scan run. " +
         "Without a hosted run backend this returns SCAN_INFRA_UNAVAILABLE or RUN_NOT_FOUND. " +
         "Never invents findings, scores, or a completed report.",
-      inputSchema: {
-        runId: z
-          .string()
-          .optional()
-          .describe("Run id returned by a real hosted start_run. None exist until scan infra is issued."),
-      },
+      inputSchema: fetchRunSchema,
     },
-    async ({ runId }) => {
-      const result = fetchRun({ runId });
+    async (args) => {
+      const result = fetchRun(args);
       return jsonResult(result, true);
     },
   );
