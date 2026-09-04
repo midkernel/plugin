@@ -8,6 +8,7 @@
   "homepage": "https://midkernel.com",
   "repository": "https://github.com/midkernel/plugin",
   "keywords": ["scan", "security", "mcp"],
+  "logo": "assets/icon.png",
   "variables": {
     "type": "object",
     "properties": {

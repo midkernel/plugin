@@ -1,6 +1,6 @@
 ---
 name: scan-repo
-description: Use this when the user wants to scan a repository for security issues with Midkernel Scan. Connect a GitHub repo, list public playbooks, start a run with a required profile (low | balanced | max), and fetch status or report. Do not use for Threat Intel.
+description: Use this when the user wants to scan a repository for security issues with Midkernel Scan.
 ---
 
 # Scan a repository
