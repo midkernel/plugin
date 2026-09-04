@@ -3,11 +3,25 @@ name: scan-repo
 description: Use this when the user wants to scan a repository for security issues with Midkernel Scan.
 ---
 
-# Scan a repository
+# Midkernel
 
-Use Midkernel Scan when the user wants to scan a GitHub repository for security issues.
+Scan a GitHub repository from your agent. Midkernel Scan runs an open workflow in an isolated sandbox and returns a report with the complete log. Credits meter the run.
 
-This plugin is a distribution surface for Midkernel Scan (same pattern as Neon / Vercel: one connector + skills). It is not a third product and not a new bot teammate.
+Use this when the user wants to scan a repository for security issues with Midkernel Scan.
+
+## Install confirm
+
+Add the Midkernel connector? It lets this agent run Midkernel Scan on a GitHub repository you choose.
+
+## After install
+
+Connect your Midkernel account, then pick a repository. The GitHub app is read-only. Then choose a workflow and a profile — `low`, `balanced`, or `max`. Credits are shown before a run starts. Optional `--threat <class>` pins an existing profile to a threat class; it is not a fourth profile.
+
+## Micro
+
+Read-only GitHub app · credits per run · no write access
+
+This plugin is a distribution surface for Midkernel Scan (same pattern as Neon / Vercel: one connector + skills). Not a publish go. Do not invent prices. Do not say a third product name, dollar amounts, knock free Threat Intel, or use a public byline.
 
 ## Tools
 
