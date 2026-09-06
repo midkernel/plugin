@@ -132,6 +132,34 @@ describe("list_playbooks", () => {
     });
   });
 
+  it("maps app GET /api/playbooks when an app client is provided", async () => {
+    const result = await listPlaybooks({
+      fetch: async () => {
+        throw new Error("GitHub should not be called when the app returns playbooks");
+      },
+      appClient: {
+        listPlaybooks: async () => ({
+          ok: true,
+          source: "midkernel-app",
+          defaultPlaybook: "security-review",
+          playbooks: [
+            {
+              id: "pb_1",
+              name: "security-review",
+              slug: "security-review",
+              path: "security-review.md",
+              repoUrl: "https://github.com/midkernel/playbooks",
+            },
+          ],
+        }),
+      },
+    });
+
+    expect(result.empty).toBe(false);
+    expect(result.playbooks.map((entry) => entry.id)).toEqual(["security-review"]);
+    expect(result.defaultPlaybook.id).toBe("security-review");
+  });
+
   it("returns empty + note on fetch failure instead of inventing playbooks", async () => {
     const fetchFn: FetchLike = async () => {
       throw new Error("network down");
