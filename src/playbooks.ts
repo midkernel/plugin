@@ -4,6 +4,17 @@ export const DEFAULT_PLAYBOOKS_REPO_URL = "https://github.com/midkernel/playbook
 export const DEFAULT_PLAYBOOKS_CONTENTS_URL =
   "https://api.github.com/repos/midkernel/playbooks/contents";
 
+/** Public registry slug / start_run id. Path is the root file on midkernel/playbooks main. */
+export const DEFAULT_PLAYBOOK_ID = "security-review";
+export const DEFAULT_PLAYBOOK_PATH = "security-review.md";
+
+export const DEFAULT_PLAYBOOK = {
+  id: DEFAULT_PLAYBOOK_ID,
+  name: DEFAULT_PLAYBOOK_ID,
+  path: DEFAULT_PLAYBOOK_PATH,
+  url: `${DEFAULT_PLAYBOOKS_REPO_URL}/blob/main/${DEFAULT_PLAYBOOK_PATH}`,
+} as const;
+
 const SHELL_BASENAMES = new Set(["readme.md", "readme", "license", "license.md", "license.txt"]);
 
 const PLAYBOOK_EXTENSIONS = new Set([".yml", ".yaml", ".md", ".json"]);
@@ -18,6 +29,7 @@ export type PlaybookEntry = {
 export type ListPlaybooksResult = {
   registry: string;
   playbooks: PlaybookEntry[];
+  defaultPlaybook: PlaybookEntry;
   empty: boolean;
   note: string | null;
 };
@@ -38,6 +50,35 @@ function hasPlaybookExtension(name: string): boolean {
   return PLAYBOOK_EXTENSIONS.has(name.slice(dot).toLowerCase());
 }
 
+function stripPlaybookExtension(value: string): string {
+  return value.replace(/\.(ya?ml|md|json)$/i, "");
+}
+
+function playbookIdFromPath(path: string): string {
+  return stripPlaybookExtension(path);
+}
+
+export function isDefaultPlaybook(entry: Pick<PlaybookEntry, "id" | "name" | "path">): boolean {
+  return (
+    entry.id === DEFAULT_PLAYBOOK_ID ||
+    entry.name === DEFAULT_PLAYBOOK_ID ||
+    entry.path === DEFAULT_PLAYBOOK_PATH
+  );
+}
+
+function sortDefaultFirst(playbooks: PlaybookEntry[]): PlaybookEntry[] {
+  return [...playbooks].sort((a, b) => {
+    const aDefault = isDefaultPlaybook(a) ? 0 : 1;
+    const bDefault = isDefaultPlaybook(b) ? 0 : 1;
+    if (aDefault !== bDefault) return aDefault - bDefault;
+    return a.id.localeCompare(b.id);
+  });
+}
+
+function resolveDefaultPlaybook(playbooks: PlaybookEntry[]): PlaybookEntry {
+  return playbooks.find(isDefaultPlaybook) ?? { ...DEFAULT_PLAYBOOK };
+}
+
 function parseContents(value: unknown) {
   return githubContentsSchema.parse(value);
 }
@@ -53,20 +94,27 @@ export async function listPlaybooks(options?: {
 
   try {
     const items = await walkContents(fetchFn, contentsUrl, 0);
-    const playbooks = items
-      .filter((item) => item.type === "file" && item.name && !isShellName(item.name) && hasPlaybookExtension(item.name))
-      .map((item) => ({
-        id: item.path ?? item.name ?? "",
-        name: (item.name ?? item.path ?? "").replace(/\.(ya?ml|md|json)$/i, ""),
-        path: item.path ?? item.name ?? "",
-        url: item.html_url ?? `${repoUrl}/blob/main/${item.path ?? item.name}`,
-      }))
-      .filter((entry) => entry.id.length > 0);
+    const playbooks = sortDefaultFirst(
+      items
+        .filter((item) => item.type === "file" && item.name && !isShellName(item.name) && hasPlaybookExtension(item.name))
+        .map((item) => {
+          const path = item.path ?? item.name ?? "";
+          const filename = item.name ?? item.path ?? "";
+          return {
+            id: playbookIdFromPath(path),
+            name: stripPlaybookExtension(filename),
+            path,
+            url: item.html_url ?? `${repoUrl}/blob/main/${path}`,
+          };
+        })
+        .filter((entry) => entry.id.length > 0),
+    );
 
     if (playbooks.length === 0) {
       return {
         registry: repoUrl,
         playbooks: [],
+        defaultPlaybook: { ...DEFAULT_PLAYBOOK },
         empty: true,
         note: `Public registry ${repoUrl} is still a shell. No workflows/playbooks are published yet.`,
       };
@@ -75,6 +123,7 @@ export async function listPlaybooks(options?: {
     return {
       registry: repoUrl,
       playbooks,
+      defaultPlaybook: resolveDefaultPlaybook(playbooks),
       empty: false,
       note: null,
     };
@@ -83,6 +132,7 @@ export async function listPlaybooks(options?: {
     return {
       registry: repoUrl,
       playbooks: [],
+      defaultPlaybook: { ...DEFAULT_PLAYBOOK },
       empty: true,
       note: `Could not read public registry ${repoUrl} (${reason}). Returning an empty list; no playbooks invented.`,
     };

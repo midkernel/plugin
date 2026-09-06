@@ -43,6 +43,7 @@ export function createServer(session = new SessionStore()): McpServer {
     {
       description:
         "List workflows/playbooks from the public Midkernel registry (https://github.com/midkernel/playbooks). " +
+        "Default playbook is security-review (path security-review.md). " +
         "If the registry is still a shell, returns an empty list and a note. Does not invent playbooks.",
       inputSchema: listPlaybooksSchema,
     },
@@ -57,6 +58,7 @@ export function createServer(session = new SessionStore()): McpServer {
     {
       description:
         "Start a Midkernel Scan run. profile is required: low | balanced | max. " +
+        "When playbook is omitted, uses security-review from the public registry. " +
         "threat is an optional pin (threat id or class string), not a fourth profile. " +
         "Credits meter hosted runs — mention credit spend to the user; this plugin does not implement Stripe. " +
         "Hosted execute is not issued: this tool returns SCAN_INFRA_UNAVAILABLE and does not invent job ids.",
