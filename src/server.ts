@@ -1,0 +1,87 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { connectRepo } from "./connect.js";
+import { listPlaybooks } from "./playbooks.js";
+import { fetchRun, startRun } from "./scan.js";
+import { connectRepoSchema, fetchRunSchema, listPlaybooksSchema, startRunSchema } from "./schemas.js";
+import { SessionStore } from "./session.js";
+
+export const SERVER_NAME = "midkernel";
+export const SERVER_VERSION = "0.1.0";
+
+export const TOOL_NAMES = ["connect_repo", "list_playbooks", "start_run", "fetch_run"] as const;
+
+function jsonResult(payload: unknown, isError = false) {
+  return {
+    isError,
+    content: [{ type: "text" as const, text: JSON.stringify(payload, null, 2) }],
+  };
+}
+
+export function createServer(session = new SessionStore()): McpServer {
+  const server = new McpServer({
+    name: SERVER_NAME,
+    version: SERVER_VERSION,
+  });
+
+  server.registerTool(
+    "connect_repo",
+    {
+      description:
+        "Connect or select a GitHub repository for Midkernel Scan. " +
+        "Pass owner + name to select a repo, or omit both to list repos visible to the read-only GitHub App installation. " +
+        "The GitHub App API is stubbed in v0 (IT owns OAuth and scopes).",
+      inputSchema: connectRepoSchema,
+    },
+    async (args) => {
+      const result = connectRepo(args, session);
+      return jsonResult(result, "error" in result);
+    },
+  );
+
+  server.registerTool(
+    "list_playbooks",
+    {
+      description:
+        "List workflows/playbooks from the public Midkernel registry (https://github.com/midkernel/playbooks). " +
+        "If the registry is still a shell, returns an empty list and a note. Does not invent playbooks.",
+      inputSchema: listPlaybooksSchema,
+    },
+    async () => {
+      const result = await listPlaybooks();
+      return jsonResult(result);
+    },
+  );
+
+  server.registerTool(
+    "start_run",
+    {
+      description:
+        "Start a Midkernel Scan run. profile is required: low | balanced | max. " +
+        "threat is an optional pin (threat id or class string), not a fourth profile. " +
+        "Credits meter hosted runs — mention credit spend to the user; this plugin does not implement Stripe. " +
+        "Hosted execute is not issued: this tool returns SCAN_INFRA_UNAVAILABLE and does not invent job ids.",
+      inputSchema: startRunSchema,
+    },
+    async (args) => {
+      const result = startRun(args, session);
+      return jsonResult(result, true);
+    },
+  );
+
+  server.registerTool(
+    "fetch_run",
+    {
+      description:
+        "Fetch status and report for a Midkernel Scan run. " +
+        "Without a hosted run backend this returns SCAN_INFRA_UNAVAILABLE or RUN_NOT_FOUND. " +
+        "Never invents findings, scores, or a completed report.",
+      inputSchema: fetchRunSchema,
+    },
+    async (args) => {
+      const result = fetchRun(args);
+      return jsonResult(result, true);
+    },
+  );
+
+  return server;
+}

@@ -1,0 +1,30 @@
+{
+  "name": "midkernel-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Midkernel Scan MCP server and Cursor / Grok Bot plugin package",
+  "type": "module",
+  "bin": {
+    "midkernel-mcp": "./dist/index.js"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "tsx": "^4.20.5",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.1",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
