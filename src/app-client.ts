@@ -3,7 +3,8 @@
  *
  *   POST {MIDKERNEL_APP_URL}/api/scans/start
  *   GET  {MIDKERNEL_APP_URL}/api/runs/:id
- *   GET  {MIDKERNEL_APP_URL}/api/repos   (agreed installation listing)
+ *   GET  {MIDKERNEL_APP_URL}/api/repos
+ *   GET  {MIDKERNEL_APP_URL}/api/playbooks
  *
  * Auth: Authorization: Bearer <Midkernel OAuth access token or MIDKERNEL_API_TOKEN>.
  * Never invents a successful run, findings, or report.
@@ -18,6 +19,7 @@ export const APP_PATHS = {
   startScan: "/api/scans/start",
   run: (id: string) => `/api/runs/${encodeURIComponent(id)}`,
   repos: "/api/repos",
+  playbooks: "/api/playbooks",
 } as const;
 
 export const PLUGIN_USER_AGENT = "midkernel-plugin/0.1";
@@ -81,6 +83,21 @@ export type ListReposSuccess = {
   note: string;
 };
 
+export type AppPlaybook = {
+  id: string;
+  name: string;
+  slug: string;
+  path: string | null;
+  repoUrl: string | null;
+};
+
+export type ListPlaybooksSuccess = {
+  ok: true;
+  source: "midkernel-app";
+  defaultPlaybook: string;
+  playbooks: AppPlaybook[];
+};
+
 export type AppClient = {
   startScan: (input: {
     owner: string;
@@ -91,6 +108,7 @@ export type AppClient = {
   }) => Promise<StartScanSuccess | AppHttpError>;
   fetchRun: (runId: string) => Promise<FetchRunSuccess | AppHttpError>;
   listRepos: () => Promise<ListReposSuccess | AppHttpError>;
+  listPlaybooks: () => Promise<ListPlaybooksSuccess | AppHttpError>;
 };
 
 const CREDITS_SPENT_NOTE =
@@ -260,6 +278,29 @@ export function createAppClient(
           ok: false,
           error: ErrorCode.GITHUB_APP_UNAVAILABLE,
           message: `Could not reach Midkernel app repo listing (${reason}).`,
+          status: 0,
+        };
+      }
+    },
+
+    async listPlaybooks() {
+      const url = joinAppUrl(appUrl, APP_PATHS.playbooks);
+      try {
+        const response = await http(url, {
+          method: "GET",
+          headers: bearerHeaders(token),
+        });
+        const body = await readJsonBody(response);
+        if (!response.ok) {
+          return mapAppError(response.status, body, `Playbook listing failed (HTTP ${response.status}).`);
+        }
+        return mapPlaybooksSuccess(body);
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        return {
+          ok: false,
+          error: ErrorCode.SCAN_INFRA_UNAVAILABLE,
+          message: `Could not reach Midkernel app playbooks API (${reason}). No playbooks were invented.`,
           status: 0,
         };
       }
@@ -440,4 +481,39 @@ function mapRepo(value: unknown): InstallationRepo | null {
 
 export function repoRefEquals(left: GitHubRepoRef, right: GitHubRepoRef): boolean {
   return left.owner.toLowerCase() === right.owner.toLowerCase() && left.name.toLowerCase() === right.name.toLowerCase();
+}
+
+function mapPlaybooksSuccess(body: unknown): ListPlaybooksSuccess | AppHttpError {
+  const record = asRecord(body);
+  const raw = Array.isArray(record?.playbooks) ? record.playbooks : null;
+  if (!record || !raw) {
+    return {
+      ok: false,
+      error: "invalid_app_response",
+      message: "App playbook listing did not include playbooks. No playbooks were invented.",
+      status: 502,
+    };
+  }
+
+  const playbooks: AppPlaybook[] = [];
+  for (const item of raw) {
+    const row = asRecord(item);
+    const slug = asString(row?.slug) ?? asString(row?.id);
+    const name = asString(row?.name) ?? slug;
+    if (!row || !slug || !name) continue;
+    playbooks.push({
+      id: asString(row.id) ?? slug,
+      name,
+      slug,
+      path: asString(row.path),
+      repoUrl: asString(row.repoUrl),
+    });
+  }
+
+  return {
+    ok: true,
+    source: "midkernel-app",
+    defaultPlaybook: asString(record.default) ?? "security-review",
+    playbooks,
+  };
 }

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { APP_PATHS } from "../src/app-client.js";
 import {
   isPlaceholderEnvValue,
   isScanApiConfigured,
@@ -33,5 +34,12 @@ describe("plugin config", () => {
     expect(joinAppUrl("https://midkernel.com/app/", "api/runs/abc")).toBe(
       "https://midkernel.com/app/api/runs/abc",
     );
+  });
+
+  it("pins Scan HTTP paths to the app contract", () => {
+    expect(APP_PATHS.startScan).toBe("/api/scans/start");
+    expect(APP_PATHS.run("run_1")).toBe("/api/runs/run_1");
+    expect(APP_PATHS.repos).toBe("/api/repos");
+    expect(APP_PATHS.playbooks).toBe("/api/playbooks");
   });
 });

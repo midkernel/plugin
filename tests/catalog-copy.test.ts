@@ -55,6 +55,9 @@ describe("signed catalog copy", () => {
     expect(readme).toMatch(/AWS ECS agentflow is still unissued/i);
     expect(readme).toMatch(/Midkernel-as-AS/i);
     expect(readme).toContain("/oauth/authorize");
+    expect(readme).toContain("/api/oauth/token");
+    expect(readme).toContain("/api/oauth/register");
+    expect(readme).toContain("/api/playbooks");
     expect(readme).not.toMatch(/accounts\.google\.com/);
   });
 

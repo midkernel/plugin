@@ -3,18 +3,21 @@
  *
  * Cursor's IdP for this connector is Midkernel — not Google. Google remains
  * the app's own user sign-in. Cursor discovers these URLs via RFC 8414 /
- * RFC 9728 metadata the app will host. If those AS routes are not live yet,
+ * RFC 9728 metadata the app hosts. If those AS routes are not live yet,
  * helpers return AUTH_NOT_CONFIGURED and never invent a token or run.
  *
- * Agreed app paths (prefix with MIDKERNEL_APP_URL; production includes
- * Next basePath `/app`, e.g. https://midkernel.com/app):
+ * App AS paths (prefix MIDKERNEL_APP_URL; production includes Next basePath
+ * `/app`, e.g. https://midkernel.com/app) — match midkernel/app oauthMetadata:
  *   GET  /.well-known/oauth-authorization-server
  *   GET  /.well-known/oauth-protected-resource
  *   GET  /oauth/authorize
- *   POST /oauth/token
- *   POST /oauth/register
- *   POST /oauth/revoke
+ *   POST /api/oauth/token
+ *   POST /api/oauth/register
  *   MCP  /mcp
+ * Revoke is not hosted — do not require /oauth/revoke.
+ *
+ * When discovery succeeds, authorize/token/register URLs come from metadata.
+ * Hardcoded paths are fallbacks only. Never invent endpoints.
  *
  * Cursor redirect URIs to register on the app AS:
  *   https://www.cursor.com/agents/mcp/oauth/callback
@@ -28,9 +31,8 @@ export const MIDKERNEL_AS_IDP = "midkernel" as const;
 
 export const MIDKERNEL_AS_PATHS = {
   authorize: "/oauth/authorize",
-  token: "/oauth/token",
-  register: "/oauth/register",
-  revoke: "/oauth/revoke",
+  token: "/api/oauth/token",
+  register: "/api/oauth/register",
   metadata: "/.well-known/oauth-authorization-server",
   protectedResource: "/.well-known/oauth-protected-resource",
   mcp: "/mcp",
@@ -48,7 +50,8 @@ export type MidkernelAsUrls = {
   authorization_endpoint: string;
   token_endpoint: string;
   registration_endpoint: string;
-  revocation_endpoint: string;
+  /** App does not host revoke. Null unless metadata advertises one. */
+  revocation_endpoint: string | null;
   mcp_endpoint: string;
   metadata_url: string;
   protected_resource_url: string;
@@ -88,10 +91,45 @@ export function midkernelAsUrls(appUrl: string): MidkernelAsUrls {
     authorization_endpoint: joinAppUrl(appUrl, MIDKERNEL_AS_PATHS.authorize),
     token_endpoint: joinAppUrl(appUrl, MIDKERNEL_AS_PATHS.token),
     registration_endpoint: joinAppUrl(appUrl, MIDKERNEL_AS_PATHS.register),
-    revocation_endpoint: joinAppUrl(appUrl, MIDKERNEL_AS_PATHS.revoke),
+    revocation_endpoint: null,
     mcp_endpoint: joinAppUrl(appUrl, MIDKERNEL_AS_PATHS.mcp),
     metadata_url: joinAppUrl(appUrl, MIDKERNEL_AS_PATHS.metadata),
     protected_resource_url: joinAppUrl(appUrl, MIDKERNEL_AS_PATHS.protectedResource),
+  };
+}
+
+function asEndpoint(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+/**
+ * Overlay discovered RFC 8414 endpoints onto fallbacks.
+ * Required authorize/token must be present. Register uses metadata when
+ * present, else the agreed fallback. Revoke is optional — never invented.
+ */
+export function urlsFromMetadata(
+  fallback: MidkernelAsUrls,
+  metadata: Record<string, unknown>,
+): MidkernelAsUrls | AuthNotConfigured {
+  const authorization_endpoint = asEndpoint(metadata.authorization_endpoint);
+  const token_endpoint = asEndpoint(metadata.token_endpoint);
+  if (!authorization_endpoint || !token_endpoint) {
+    return authNotConfigured("Authorization server metadata is missing authorize/token endpoints.");
+  }
+  if (isGoogleIdpUrl(authorization_endpoint) || isGoogleIdpUrl(token_endpoint)) {
+    return authNotConfigured("Google is not the Cursor IdP for Midkernel remote MCP.");
+  }
+
+  const registration_endpoint = asEndpoint(metadata.registration_endpoint);
+  const revocation_endpoint = asEndpoint(metadata.revocation_endpoint);
+
+  return {
+    ...fallback,
+    issuer: asEndpoint(metadata.issuer) ?? fallback.issuer,
+    authorization_endpoint,
+    token_endpoint,
+    registration_endpoint: registration_endpoint ?? fallback.registration_endpoint,
+    revocation_endpoint,
   };
 }
 
@@ -102,7 +140,7 @@ export function authorizationServerMetadataDocument(appUrl: string): Record<stri
     authorization_endpoint: urls.authorization_endpoint,
     token_endpoint: urls.token_endpoint,
     registration_endpoint: urls.registration_endpoint,
-    revocation_endpoint: urls.revocation_endpoint,
+    // revocation_endpoint omitted — app does not host revoke.
     response_types_supported: ["code"],
     grant_types_supported: ["authorization_code", "refresh_token"],
     code_challenge_methods_supported: ["S256"],
@@ -116,7 +154,7 @@ export function authorizationServerMetadataDocument(appUrl: string): Record<stri
 export function protectedResourceMetadataDocument(appUrl: string): Record<string, unknown> {
   const urls = midkernelAsUrls(appUrl);
   return {
-    resource: urls.mcp_endpoint,
+    resource: urls.issuer,
     authorization_servers: [urls.issuer],
     scopes_supported: [...MIDKERNEL_AS_SCOPES],
     bearer_methods_supported: ["header"],
@@ -148,6 +186,7 @@ export function buildAuthorizationRequest(input: {
   codeChallenge: string;
   resource?: string;
   scope?: string;
+  urls?: MidkernelAsUrls;
 }): AuthorizationRequest | AuthNotConfigured {
   if (!input.clientId.trim()) {
     return authNotConfigured("MIDKERNEL_OAUTH_CLIENT_ID is not set.");
@@ -156,7 +195,7 @@ export function buildAuthorizationRequest(input: {
     return authNotConfigured("Google is not the Cursor IdP for Midkernel remote MCP.");
   }
 
-  const urls = midkernelAsUrls(input.appUrl);
+  const urls = input.urls ?? midkernelAsUrls(input.appUrl);
   if (isGoogleIdpUrl(urls.authorization_endpoint)) {
     return authNotConfigured("Google is not the Cursor IdP for Midkernel remote MCP.");
   }
@@ -190,15 +229,15 @@ export async function discoverAuthorizationServer(
   appUrl: string,
   fetchFn: FetchLike,
 ): Promise<{ ok: true; metadata: Record<string, unknown>; urls: MidkernelAsUrls } | AuthNotConfigured> {
-  const urls = midkernelAsUrls(appUrl);
+  const fallback = midkernelAsUrls(appUrl);
   try {
-    const response = await fetchFn(urls.metadata_url, {
+    const response = await fetchFn(fallback.metadata_url, {
       method: "GET",
       headers: { Accept: "application/json", "User-Agent": "midkernel-plugin" },
     });
     if (response.status === 404 || response.status === 501) {
       return authNotConfigured(
-        `Authorization server metadata is not hosted yet (${urls.metadata_url} → HTTP ${response.status}).`,
+        `Authorization server metadata is not hosted yet (${fallback.metadata_url} → HTTP ${response.status}).`,
       );
     }
     if (!response.ok) {
@@ -207,15 +246,8 @@ export async function discoverAuthorizationServer(
       );
     }
     const metadata = (await response.json()) as Record<string, unknown>;
-    const authorize =
-      typeof metadata.authorization_endpoint === "string" ? metadata.authorization_endpoint : "";
-    const token = typeof metadata.token_endpoint === "string" ? metadata.token_endpoint : "";
-    if (isGoogleIdpUrl(authorize) || isGoogleIdpUrl(token)) {
-      return authNotConfigured("Google is not the Cursor IdP for Midkernel remote MCP.");
-    }
-    if (!authorize || !token) {
-      return authNotConfigured("Authorization server metadata is missing authorize/token endpoints.");
-    }
+    const urls = urlsFromMetadata(fallback, metadata);
+    if ("error" in urls) return urls;
     return { ok: true, metadata, urls };
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
@@ -231,6 +263,9 @@ export async function exchangeAuthorizationCode(
     redirectUri: string;
     codeVerifier: string;
     clientSecret?: string | null;
+    /** Prefer discovered metadata.token_endpoint when present. */
+    tokenEndpoint?: string;
+    urls?: MidkernelAsUrls;
   },
   fetchFn: FetchLike,
 ): Promise<TokenSuccess | AuthNotConfigured> {
@@ -238,7 +273,12 @@ export async function exchangeAuthorizationCode(
     return authNotConfigured("OAuth client id and authorization code are required.");
   }
 
-  const urls = midkernelAsUrls(input.appUrl);
+  const fallback = midkernelAsUrls(input.appUrl);
+  const tokenEndpoint = input.tokenEndpoint ?? input.urls?.token_endpoint ?? fallback.token_endpoint;
+  if (isGoogleIdpUrl(tokenEndpoint)) {
+    return authNotConfigured("Google is not the Cursor IdP for Midkernel remote MCP.");
+  }
+
   const body = new URLSearchParams({
     grant_type: "authorization_code",
     code: input.code,
@@ -251,7 +291,7 @@ export async function exchangeAuthorizationCode(
   }
 
   try {
-    const response = await fetchFn(urls.token_endpoint, {
+    const response = await fetchFn(tokenEndpoint, {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -263,7 +303,7 @@ export async function exchangeAuthorizationCode(
 
     if (response.status === 404 || response.status === 501) {
       return authNotConfigured(
-        `Token endpoint is not hosted yet (${urls.token_endpoint} → HTTP ${response.status}).`,
+        `Token endpoint is not hosted yet (${tokenEndpoint} → HTTP ${response.status}).`,
       );
     }
     if (!response.ok) {
@@ -292,5 +332,70 @@ export async function exchangeAuthorizationCode(
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     return authNotConfigured(`Token endpoint is not reachable (${reason}).`);
+  }
+}
+
+export type RegisterSuccess = {
+  ok: true;
+  client_id: string;
+  client_secret: string | null;
+};
+
+export async function registerOAuthClient(
+  input: {
+    appUrl: string;
+    clientName?: string;
+    redirectUris?: string[];
+    registrationEndpoint?: string;
+    urls?: MidkernelAsUrls;
+  },
+  fetchFn: FetchLike,
+): Promise<RegisterSuccess | AuthNotConfigured> {
+  const fallback = midkernelAsUrls(input.appUrl);
+  const registrationEndpoint =
+    input.registrationEndpoint ?? input.urls?.registration_endpoint ?? fallback.registration_endpoint;
+  if (isGoogleIdpUrl(registrationEndpoint)) {
+    return authNotConfigured("Google is not the Cursor IdP for Midkernel remote MCP.");
+  }
+
+  try {
+    const response = await fetchFn(registrationEndpoint, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "User-Agent": "midkernel-plugin",
+      },
+      body: JSON.stringify({
+        client_name: input.clientName ?? "Midkernel Cursor MCP",
+        redirect_uris: input.redirectUris ?? [...CURSOR_MCP_REDIRECT_URIS],
+        token_endpoint_auth_method: "none",
+        grant_types: ["authorization_code", "refresh_token"],
+        response_types: ["code"],
+        scope: MIDKERNEL_AS_SCOPES.join(" "),
+      }),
+    });
+
+    if (response.status === 404 || response.status === 501) {
+      return authNotConfigured(
+        `Registration endpoint is not hosted yet (${registrationEndpoint} → HTTP ${response.status}).`,
+      );
+    }
+    if (!response.ok) {
+      return authNotConfigured(`Dynamic client registration failed (HTTP ${response.status}).`);
+    }
+
+    const payload = (await response.json()) as { client_id?: unknown; client_secret?: unknown };
+    if (typeof payload.client_id !== "string" || !payload.client_id) {
+      return authNotConfigured("Registration endpoint did not return a client_id. No client was invented.");
+    }
+    return {
+      ok: true,
+      client_id: payload.client_id,
+      client_secret: typeof payload.client_secret === "string" ? payload.client_secret : null,
+    };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return authNotConfigured(`Registration endpoint is not reachable (${reason}).`);
   }
 }

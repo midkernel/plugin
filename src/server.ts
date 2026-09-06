@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { readPluginConfig } from "./config.js";
+import { createAppClient } from "./app-client.js";
+import { isScanApiConfigured, readPluginConfig } from "./config.js";
 import { connectRepo } from "./connect.js";
 import { listPlaybooks } from "./playbooks.js";
 import { fetchRun, startRun } from "./scan.js";
@@ -50,13 +51,20 @@ export function createServer(session = new SessionStore()): McpServer {
     "list_playbooks",
     {
       description:
-        "List workflows/playbooks from the public Midkernel registry (https://github.com/midkernel/playbooks). " +
+        "List workflows/playbooks from midkernel/app GET /api/playbooks when auth is configured, " +
+        "else the public Midkernel registry (https://github.com/midkernel/playbooks). " +
         "Default playbook is security-review (path security-review.md). " +
         "If the registry is still a shell, returns an empty list and a note. Does not invent playbooks.",
       inputSchema: listPlaybooksSchema,
     },
     async () => {
-      const result = await listPlaybooks();
+      const live = readPluginConfig();
+      const token = session.getAccessToken() ?? live.accessToken;
+      const configured = { ...live, accessToken: token };
+      const appClient = isScanApiConfigured(configured)
+        ? createAppClient(configured)
+        : undefined;
+      const result = await listPlaybooks({ appClient });
       return jsonResult(result);
     },
   );

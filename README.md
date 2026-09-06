@@ -2,7 +2,7 @@
 
 Cursor / Grok Bot **plugin** for Midkernel Scan. Catalog name: **Midkernel**. One OAuth MCP connector + skills (same pattern as Neon / Vercel). Not a third product. Not a new bot teammate.
 
-v0 talks to **midkernel/app Scan APIs** when `MIDKERNEL_APP_URL` and auth are set (`POST /api/scans/start`, `GET /api/runs/:id`). That is the real one-shot `security-review` path. **AWS ECS agentflow is still unissued** and is not faked. Without URL/auth this package returns `SCAN_INFRA_UNAVAILABLE` / `AUTH_NOT_CONFIGURED` — it does not invent a successful run, job ids, or findings.
+v0 talks to **midkernel/app Scan APIs** when `MIDKERNEL_APP_URL` and auth are set (`POST /api/scans/start`, `GET /api/runs/:id`, `GET /api/repos`, `GET /api/playbooks`). That is the real one-shot `security-review` path. **AWS ECS agentflow is still unissued** and is not faked. Without URL/auth this package returns `SCAN_INFRA_UNAVAILABLE` / `AUTH_NOT_CONFIGURED` — it does not invent a successful run, job ids, or findings.
 
 Tracker: [midkernel/website#17](https://github.com/midkernel/website/issues/17). Coordinate with [midkernel/app#13](https://github.com/midkernel/app/pull/13) (run routes). Midkernel-as-AS routes may still be unmerged — the client is wired to the agreed paths and fails closed.
 
@@ -11,7 +11,7 @@ Tracker: [midkernel/website#17](https://github.com/midkernel/website/issues/17).
 | Tool | What |
 | --- | --- |
 | `connect_repo` | Select `owner` + `name`, or list installation repos. Read-only GitHub App. Uses app `GET /api/repos` or GitHub installation listing when session tokens exist. |
-| `list_playbooks` | Workflows from public [`midkernel/playbooks`](https://github.com/midkernel/playbooks). Default playbook is `security-review` from the public registry. Shell registry → empty list + note. |
+| `list_playbooks` | App `GET /api/playbooks` when auth is configured; else public [`midkernel/playbooks`](https://github.com/midkernel/playbooks). Default playbook is `security-review` from the public registry. Shell registry → empty list + note. |
 | `start_run` | **profile required:** `low` \| `balanced` \| `max`. `threat` is an optional **pin**, not a fourth profile. Calls the app when URL/auth are configured. Credits meter hosted runs (no Stripe here). |
 | `fetch_run` | Status + report from the app. Report only after a real model pass. No invented findings. |
 
@@ -120,8 +120,9 @@ Agreed URLs the app will host (prefix `MIDKERNEL_APP_URL`):
 | Metadata | `/.well-known/oauth-authorization-server` |
 | Protected resource | `/.well-known/oauth-protected-resource` |
 | Authorize | `/oauth/authorize` |
-| Token | `/oauth/token` |
-| Register | `/oauth/register` |
+| Token | `/api/oauth/token` |
+| Register | `/api/oauth/register` |
+| Revoke | not hosted (optional; do not require) |
 | Remote MCP | `/mcp` |
 
 Cursor redirect URIs to register on the app AS:
@@ -129,7 +130,7 @@ Cursor redirect URIs to register on the app AS:
 - `https://www.cursor.com/agents/mcp/oauth/callback`
 - `http://localhost:8787/callback`
 
-`mcp.json` includes `midkernel-remote` with `auth.CLIENT_ID` + scope `scan`. If AS routes are not live, helpers return **`AUTH_NOT_CONFIGURED`** and never invent a token or run.
+`mcp.json` includes `midkernel-remote` with `auth.CLIENT_ID` + scope `scan`. Discovery uses authorize/token/register from AS metadata when present (hardcoded paths are fallbacks only). If AS routes are not live, helpers return **`AUTH_NOT_CONFIGURED`** and never invent a token or run.
 
 ## Ownership
 
