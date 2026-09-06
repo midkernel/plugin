@@ -1,3 +1,4 @@
+import type { AppClient } from "./app-client.js";
 import { githubContentsSchema, githubDirSchema, type GithubContents } from "./schemas.js";
 
 export const DEFAULT_PLAYBOOKS_REPO_URL = "https://github.com/midkernel/playbooks";
@@ -87,10 +88,32 @@ export async function listPlaybooks(options?: {
   fetch?: FetchLike;
   contentsUrl?: string;
   repoUrl?: string;
+  appClient?: Pick<AppClient, "listPlaybooks">;
 }): Promise<ListPlaybooksResult> {
   const repoUrl = options?.repoUrl ?? DEFAULT_PLAYBOOKS_REPO_URL;
   const contentsUrl = options?.contentsUrl ?? DEFAULT_PLAYBOOKS_CONTENTS_URL;
   const fetchFn = options?.fetch ?? globalThis.fetch;
+
+  if (options?.appClient) {
+    const fromApp = await options.appClient.listPlaybooks();
+    if (fromApp.ok && fromApp.playbooks.length > 0) {
+      const playbooks = sortDefaultFirst(
+        fromApp.playbooks.map((entry) => ({
+          id: entry.slug,
+          name: entry.name,
+          path: entry.path ?? `${entry.slug}.md`,
+          url: entry.repoUrl ?? `${repoUrl}/blob/main/${entry.path ?? `${entry.slug}.md`}`,
+        })),
+      );
+      return {
+        registry: repoUrl,
+        playbooks,
+        defaultPlaybook: resolveDefaultPlaybook(playbooks),
+        empty: false,
+        note: null,
+      };
+    }
+  }
 
   try {
     const items = await walkContents(fetchFn, contentsUrl, 0);

@@ -12,25 +12,30 @@
   "variables": {
     "type": "object",
     "properties": {
+      "MIDKERNEL_APP_URL": {
+        "type": "string",
+        "title": "Midkernel app URL",
+        "description": "Base URL for Scan APIs, including Next basePath in production (https://midkernel.com/app). Local: http://localhost:3000 or http://localhost:3000/app."
+      },
+      "MIDKERNEL_API_TOKEN": {
+        "type": "string",
+        "title": "Midkernel API token",
+        "description": "Bearer token for stdio until Midkernel OAuth completes. Placeholder values are ignored. Credits meter hosted runs; Stripe is not implemented here."
+      },
+      "MIDKERNEL_OAUTH_CLIENT_ID": {
+        "type": "string",
+        "title": "Midkernel OAuth client id",
+        "description": "Static Cursor remote MCP client id. Midkernel is the AS (not Google). Placeholder until the app hosts authorize/token."
+      },
       "GITHUB_APP_ID": {
         "type": "string",
         "title": "GitHub App ID",
-        "description": "Read-only GitHub App. IT owns OAuth and scopes. Placeholder until wired."
+        "description": "Read-only GitHub App. IT owns OAuth and scopes. Listing uses session tokens; App credentials stay on midkernel/app."
       },
       "GITHUB_APP_PRIVATE_KEY": {
         "type": "string",
         "title": "GitHub App private key",
-        "description": "Placeholder. Do not commit a real key."
-      },
-      "SCAN_API_URL": {
-        "type": "string",
-        "title": "Scan API URL",
-        "description": "Hosted execute endpoint. Unissued — start_run returns SCAN_INFRA_UNAVAILABLE until this is real."
-      },
-      "SCAN_API_TOKEN": {
-        "type": "string",
-        "title": "Scan API token",
-        "description": "Placeholder. Credits meter hosted runs; Stripe is not implemented here."
+        "description": "Placeholder. Do not commit a real key. Not required for the plugin HTTP client."
       }
     }
   }

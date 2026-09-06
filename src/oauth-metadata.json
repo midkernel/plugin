@@ -1,0 +1,21 @@
+{
+  "idp": "midkernel",
+  "not_idp": "google",
+  "scopes_supported": ["scan"],
+  "paths": {
+    "authorization_endpoint": "/oauth/authorize",
+    "token_endpoint": "/api/oauth/token",
+    "registration_endpoint": "/api/oauth/register",
+    "metadata": "/.well-known/oauth-authorization-server",
+    "protected_resource": "/.well-known/oauth-protected-resource",
+    "mcp": "/mcp"
+  },
+  "revocation_endpoint": null,
+  "revocation_note": "App does not host revoke. Optional — do not require /oauth/revoke.",
+  "cursor_redirect_uris": [
+    "https://www.cursor.com/agents/mcp/oauth/callback",
+    "https://www.cursor.com/bot/mcp/oauth/callback"
+  ],
+  "dcr_optional_redirect_schemes": ["http://localhost", "cursor:", "vscode:"],
+  "notes": "Prefix paths with MIDKERNEL_APP_URL (production includes Next basePath /app). Prefer RFC 8414 metadata authorize/token/register when discovery succeeds. IT production redirect allowlist is exact (Cursor Agents + Grok Bot). localhost / cursor:// / vscode:// are DCR defaults only — not required on the allowlist. Do not invent other redirect URIs. If the app AS routes are not live, the plugin returns AUTH_NOT_CONFIGURED and never invents a token or run."
+}

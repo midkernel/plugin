@@ -1,4 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { createAppClient } from "./app-client.js";
+import { isScanApiConfigured, readPluginConfig } from "./config.js";
 import { connectRepo } from "./connect.js";
 import { listPlaybooks } from "./playbooks.js";
 import { fetchRun, startRun } from "./scan.js";
@@ -18,6 +20,12 @@ function jsonResult(payload: unknown, isError = false) {
 }
 
 export function createServer(session = new SessionStore()): McpServer {
+  const config = readPluginConfig();
+  if (config.accessToken) session.setAccessToken(config.accessToken);
+  if (config.githubInstallationToken) {
+    session.setGithubInstallationToken(config.githubInstallationToken);
+  }
+
   const server = new McpServer({
     name: SERVER_NAME,
     version: SERVER_VERSION,
@@ -29,11 +37,12 @@ export function createServer(session = new SessionStore()): McpServer {
       description:
         "Connect or select a GitHub repository for Midkernel Scan. " +
         "Pass owner + name to select a repo, or omit both to list repos visible to the read-only GitHub App installation. " +
-        "The GitHub App API is stubbed in v0 (IT owns OAuth and scopes).",
+        "When Midkernel session tokens are present, lists installation repos via the app (or GitHub installation API). " +
+        "The GitHub App is read-only.",
       inputSchema: connectRepoSchema,
     },
     async (args) => {
-      const result = connectRepo(args, session);
+      const result = await connectRepo(args, session);
       return jsonResult(result, "error" in result);
     },
   );
@@ -42,13 +51,20 @@ export function createServer(session = new SessionStore()): McpServer {
     "list_playbooks",
     {
       description:
-        "List workflows/playbooks from the public Midkernel registry (https://github.com/midkernel/playbooks). " +
+        "List workflows/playbooks from midkernel/app GET /api/playbooks when auth is configured, " +
+        "else the public Midkernel registry (https://github.com/midkernel/playbooks). " +
         "Default playbook is security-review (path security-review.md). " +
         "If the registry is still a shell, returns an empty list and a note. Does not invent playbooks.",
       inputSchema: listPlaybooksSchema,
     },
     async () => {
-      const result = await listPlaybooks();
+      const live = readPluginConfig();
+      const token = session.getAccessToken() ?? live.accessToken;
+      const configured = { ...live, accessToken: token };
+      const appClient = isScanApiConfigured(configured)
+        ? createAppClient(configured)
+        : undefined;
+      const result = await listPlaybooks({ appClient });
       return jsonResult(result);
     },
   );
@@ -57,16 +73,17 @@ export function createServer(session = new SessionStore()): McpServer {
     "start_run",
     {
       description:
-        "Start a Midkernel Scan run. profile is required: low | balanced | max. " +
+        "Start a Midkernel Scan run via the midkernel/app HTTP API. profile is required: low | balanced | max. " +
         "When playbook is omitted, uses security-review from the public registry. " +
         "threat is an optional pin (threat id or class string), not a fourth profile. " +
         "Credits meter hosted runs — mention credit spend to the user; this plugin does not implement Stripe. " +
-        "Hosted execute is not issued: this tool returns SCAN_INFRA_UNAVAILABLE and does not invent job ids.",
+        "Requires MIDKERNEL_APP_URL plus Midkernel OAuth or MIDKERNEL_API_TOKEN. " +
+        "Does not invent job ids or findings. AWS ECS agentflow is still unissued; v0 is the app one-shot.",
       inputSchema: startRunSchema,
     },
     async (args) => {
-      const result = startRun(args, session);
-      return jsonResult(result, true);
+      const result = await startRun(args, session);
+      return jsonResult(result, !result.ok);
     },
   );
 
@@ -74,14 +91,14 @@ export function createServer(session = new SessionStore()): McpServer {
     "fetch_run",
     {
       description:
-        "Fetch status and report for a Midkernel Scan run. " +
-        "Without a hosted run backend this returns SCAN_INFRA_UNAVAILABLE or RUN_NOT_FOUND. " +
-        "Never invents findings, scores, or a completed report.",
+        "Fetch status and report for a Midkernel Scan run from midkernel/app GET /api/runs/:id. " +
+        "Requires MIDKERNEL_APP_URL plus auth. Returns AUTH_NOT_CONFIGURED or RUN_NOT_FOUND when missing. " +
+        "Never invents findings, scores, or a completed report. Report is present only after a real model pass.",
       inputSchema: fetchRunSchema,
     },
     async (args) => {
-      const result = fetchRun(args);
-      return jsonResult(result, true);
+      const result = await fetchRun(args, session);
+      return jsonResult(result, !result.ok);
     },
   );
 
