@@ -1,0 +1,37 @@
+{
+  "name": "midkernel",
+  "version": "0.1.0",
+  "description": "Scan a GitHub repository from your agent. Midkernel Scan runs an open workflow in an isolated sandbox and returns a report with the complete log. Credits meter the run.",
+  "author": {
+    "name": "Midkernel"
+  },
+  "homepage": "https://midkernel.com",
+  "repository": "https://github.com/midkernel/plugin",
+  "keywords": ["scan", "security", "mcp"],
+  "logo": "assets/icon.png",
+  "variables": {
+    "type": "object",
+    "properties": {
+      "GITHUB_APP_ID": {
+        "type": "string",
+        "title": "GitHub App ID",
+        "description": "Read-only GitHub App. IT owns OAuth and scopes. Placeholder until wired."
+      },
+      "GITHUB_APP_PRIVATE_KEY": {
+        "type": "string",
+        "title": "GitHub App private key",
+        "description": "Placeholder. Do not commit a real key."
+      },
+      "SCAN_API_URL": {
+        "type": "string",
+        "title": "Scan API URL",
+        "description": "Hosted execute endpoint. Unissued — start_run returns SCAN_INFRA_UNAVAILABLE until this is real."
+      },
+      "SCAN_API_TOKEN": {
+        "type": "string",
+        "title": "Scan API token",
+        "description": "Placeholder. Credits meter hosted runs; Stripe is not implemented here."
+      }
+    }
+  }
+}

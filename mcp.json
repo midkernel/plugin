@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "midkernel": {
+      "command": "npx",
+      "args": ["tsx", "src/index.ts"],
+      "env": {
+        "GITHUB_APP_ID": "${GITHUB_APP_ID}",
+        "GITHUB_APP_PRIVATE_KEY": "${GITHUB_APP_PRIVATE_KEY}",
+        "SCAN_API_URL": "${SCAN_API_URL}",
+        "SCAN_API_TOKEN": "${SCAN_API_TOKEN}"
+      }
+    }
+  }
+}
