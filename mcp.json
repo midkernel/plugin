@@ -4,10 +4,19 @@
       "command": "npx",
       "args": ["tsx", "src/index.ts"],
       "env": {
+        "MIDKERNEL_APP_URL": "${MIDKERNEL_APP_URL}",
+        "MIDKERNEL_API_TOKEN": "${MIDKERNEL_API_TOKEN}",
+        "MIDKERNEL_OAUTH_CLIENT_ID": "${MIDKERNEL_OAUTH_CLIENT_ID}",
+        "GITHUB_INSTALLATION_TOKEN": "${GITHUB_INSTALLATION_TOKEN}",
         "GITHUB_APP_ID": "${GITHUB_APP_ID}",
-        "GITHUB_APP_PRIVATE_KEY": "${GITHUB_APP_PRIVATE_KEY}",
-        "SCAN_API_URL": "${SCAN_API_URL}",
-        "SCAN_API_TOKEN": "${SCAN_API_TOKEN}"
+        "GITHUB_APP_PRIVATE_KEY": "${GITHUB_APP_PRIVATE_KEY}"
+      }
+    },
+    "midkernel-remote": {
+      "url": "${MIDKERNEL_APP_URL}/mcp",
+      "auth": {
+        "CLIENT_ID": "${MIDKERNEL_OAUTH_CLIENT_ID}",
+        "scopes": ["scan"]
       }
     }
   }

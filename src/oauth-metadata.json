@@ -1,0 +1,19 @@
+{
+  "idp": "midkernel",
+  "not_idp": "google",
+  "scopes_supported": ["scan"],
+  "paths": {
+    "authorization_endpoint": "/oauth/authorize",
+    "token_endpoint": "/oauth/token",
+    "registration_endpoint": "/oauth/register",
+    "revocation_endpoint": "/oauth/revoke",
+    "metadata": "/.well-known/oauth-authorization-server",
+    "protected_resource": "/.well-known/oauth-protected-resource",
+    "mcp": "/mcp"
+  },
+  "cursor_redirect_uris": [
+    "https://www.cursor.com/agents/mcp/oauth/callback",
+    "http://localhost:8787/callback"
+  ],
+  "notes": "Prefix paths with MIDKERNEL_APP_URL (production includes Next basePath /app). If the app AS routes are not live, the plugin returns AUTH_NOT_CONFIGURED and never invents a token or run."
+}

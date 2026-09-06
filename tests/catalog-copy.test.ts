@@ -50,6 +50,14 @@ describe("signed catalog copy", () => {
     expect(readme).toMatch(/default playbook is `security-review` from the public registry/i);
   });
 
+  it("documents the real app path vs AWS-still-missing without inventing prices", () => {
+    expect(readme).toMatch(/v0 talks to \*\*midkernel\/app Scan APIs\*\*/i);
+    expect(readme).toMatch(/AWS ECS agentflow is still unissued/i);
+    expect(readme).toMatch(/Midkernel-as-AS/i);
+    expect(readme).toContain("/oauth/authorize");
+    expect(readme).not.toMatch(/accounts\.google\.com/);
+  });
+
   it("does not invent prices or close website#17 from this stub", () => {
     const surfaces = [skill, manifest, readme];
     for (const text of surfaces) {

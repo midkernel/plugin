@@ -2,20 +2,27 @@
 
 Cursor / Grok Bot **plugin** for Midkernel Scan. Catalog name: **Midkernel**. One OAuth MCP connector + skills (same pattern as Neon / Vercel). Not a third product. Not a new bot teammate.
 
-v0 defines the MCP tools and the scan skill. **Hosted execute is not issued.** `start_run` returns `SCAN_INFRA_UNAVAILABLE`. This package does not fake a successful run, job ids, or agentflow.
+v0 talks to **midkernel/app Scan APIs** when `MIDKERNEL_APP_URL` and auth are set (`POST /api/scans/start`, `GET /api/runs/:id`). That is the real one-shot `security-review` path. **AWS ECS agentflow is still unissued** and is not faked. Without URL/auth this package returns `SCAN_INFRA_UNAVAILABLE` / `AUTH_NOT_CONFIGURED` — it does not invent a successful run, job ids, or findings.
 
-Tracker: [midkernel/website#17](https://github.com/midkernel/website/issues/17). This repo does not close that issue until start-run is a real hosted execute.
+Tracker: [midkernel/website#17](https://github.com/midkernel/website/issues/17). Coordinate with [midkernel/app#13](https://github.com/midkernel/app/pull/13) (run routes). Midkernel-as-AS routes may still be unmerged — the client is wired to the agreed paths and fails closed.
 
 ## Tools
 
 | Tool | What |
 | --- | --- |
-| `connect_repo` | Select `owner` + `name`, or list installation repos. Read-only GitHub App — **stubbed**. |
+| `connect_repo` | Select `owner` + `name`, or list installation repos. Read-only GitHub App. Uses app `GET /api/repos` or GitHub installation listing when session tokens exist. |
 | `list_playbooks` | Workflows from public [`midkernel/playbooks`](https://github.com/midkernel/playbooks). Default playbook is `security-review` from the public registry. Shell registry → empty list + note. |
-| `start_run` | **profile required:** `low` \| `balanced` \| `max`. `threat` is an optional **pin**, not a fourth profile. Always `SCAN_INFRA_UNAVAILABLE` until scan infra exists. Credits meter hosted runs (no Stripe here). |
-| `fetch_run` | Status + report. Unavailable / not found. No invented findings. |
+| `start_run` | **profile required:** `low` \| `balanced` \| `max`. `threat` is an optional **pin**, not a fourth profile. Calls the app when URL/auth are configured. Credits meter hosted runs (no Stripe here). |
+| `fetch_run` | Status + report from the app. Report only after a real model pass. No invented findings. |
 
-Out of v0: Threat Intel tools, Stripe, live GitHub App OAuth.
+Out of this package: Threat Intel tools, Stripe, AWS ECS agentflow, Google-as-Cursor-IdP.
+
+## Real path vs AWS-still-missing
+
+| Path | Status |
+| --- | --- |
+| **v0 one-shot** (`security-review` via midkernel/app HTTP) | Real when `MIDKERNEL_APP_URL` + Midkernel OAuth or `MIDKERNEL_API_TOKEN` are set. Mapped from the app. Tests mock HTTP. |
+| **AWS ECS agentflow** | Still missing (infra draft). This plugin does not invent agentflow success. |
 
 ## Catalog (signed copy)
 
@@ -41,12 +48,13 @@ Do not invent prices. Do not knock free Threat Intel. Do not use a third product
 
 ```
 .cursor-plugin/plugin.json   Cursor plugin manifest (catalog name: midkernel)
-mcp.json                     stdio MCP server (auto-discovered)
+mcp.json                     stdio MCP + remote Midkernel-as-AS entry
+src/oauth-metadata.json      agreed authorize/token/MCP paths
 assets/icon.svg              catalog mark (source)
 assets/icon.png              catalog tile (512, Void + phosphor)
 skills/scan-repo/SKILL.md    scan skill
 src/                         TypeScript MCP server (@modelcontextprotocol/sdk)
-tests/                       profiles, threat pin, no fake start_run success
+tests/                       mocked app HTTP; no invented start_run success
 ```
 
 Catalog icon is Design’s outlined square on Void `#0B0D10`, Paper outline, phosphor `#B7FF5C` once. Manifest `logo` points at `assets/icon.png`. Source: `midkernel/design/plugin`.
@@ -81,39 +89,54 @@ Local Cursor config (`~/.cursor/mcp.json` or `.cursor/mcp.json`):
 }
 ```
 
-Plugin variables in `.cursor-plugin/plugin.json` are placeholders. The server boots without real secrets.
+Plugin variables in `.cursor-plugin/plugin.json` are placeholders. The server boots without real secrets. Placeholder `PLACEHOLDER_*` values are treated as unset.
 
 ```bash
 npm run typecheck
 npm test
 ```
 
-## Env placeholders
+## Env
 
 See `.env.example`. Nothing here is a live credential.
 
 | Variable | Owner | Status |
 | --- | --- | --- |
-| `GITHUB_APP_*` | IT | Stub. OAuth + read-only App scopes later. |
-| `SCAN_API_URL` / `SCAN_API_TOKEN` | Engineering | Unissued. Do not point at a fake backend. |
+| `MIDKERNEL_APP_URL` | Engineering | App origin including `/app` in production. Alias: `SCAN_API_URL`. |
+| `MIDKERNEL_API_TOKEN` | Engineering / IT | Stdio bearer until Midkernel OAuth. Alias: `SCAN_API_TOKEN`. |
+| `MIDKERNEL_OAUTH_CLIENT_ID` | IT | Static Cursor remote MCP client. Midkernel AS, not Google. |
+| `GITHUB_INSTALLATION_TOKEN` | Session / app | Optional read-only installation listing fallback. |
+| `GITHUB_APP_*` | IT | App credentials stay on midkernel/app. |
 | Stripe / prices | — | Credits still meter. **Do not implement Stripe in this repo.** |
 
-## Blocked on scan infra
+## OAuth / remote MCP (Midkernel-as-AS)
 
-Engineering must not treat this PR as a working hosted Scan. Until start-run is a real execute:
+Cursor remote MCP authenticates against **Midkernel**, not Google. Google may still sign users into the app UI.
 
-- `start_run` → `SCAN_INFRA_UNAVAILABLE`
-- `fetch_run` → unavailable / `RUN_NOT_FOUND`
-- no invented findings, job ids, or agentflow
+Agreed URLs the app will host (prefix `MIDKERNEL_APP_URL`):
 
-`Fixes` / `Closes` on website#17 wait for that backend.
+| | Path |
+| --- | --- |
+| Metadata | `/.well-known/oauth-authorization-server` |
+| Protected resource | `/.well-known/oauth-protected-resource` |
+| Authorize | `/oauth/authorize` |
+| Token | `/oauth/token` |
+| Register | `/oauth/register` |
+| Remote MCP | `/mcp` |
+
+Cursor redirect URIs to register on the app AS:
+
+- `https://www.cursor.com/agents/mcp/oauth/callback`
+- `http://localhost:8787/callback`
+
+`mcp.json` includes `midkernel-remote` with `auth.CLIENT_ID` + scope `scan`. If AS routes are not live, helpers return **`AUTH_NOT_CONFIGURED`** and never invent a token or run.
 
 ## Ownership
 
 | Surface | Owner |
 | --- | --- |
 | MCP server, plugin package, catalog listing mechanics | Engineering |
-| OAuth app, GitHub App scopes, Workspace identity (`james@midkernel.com`) | IT |
+| OAuth app (Midkernel AS), GitHub App scopes, Workspace identity (`james@midkernel.com`) | IT |
 | Catalog name / blurb / install copy (company/anon; no public byline) | Marketing |
 | Plugin icon (outlined mark, phosphor once) | Design — included at `assets/icon.svg` / `assets/icon.png` |
 | Tracker + funnel | CoS |
