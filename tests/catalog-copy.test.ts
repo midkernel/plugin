@@ -44,6 +44,12 @@ describe("signed catalog copy", () => {
     expect(readme).toContain(CATALOG.skill);
   });
 
+  it("prefers security-review as the default Midkernel Scan playbook", () => {
+    expect(skill).toContain("Prefer `security-review` as the default Midkernel Scan playbook");
+    expect(skill).toContain("it runs `/security-review` one-shot");
+    expect(readme).toMatch(/default playbook is `security-review` from the public registry/i);
+  });
+
   it("does not invent prices or close website#17 from this stub", () => {
     const surfaces = [skill, manifest, readme];
     for (const text of surfaces) {
