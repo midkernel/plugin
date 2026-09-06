@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ErrorCode, RUN_BACKEND_MESSAGE, SCAN_INFRA_MESSAGE } from "./errors.js";
 import type { GitHubRepoRef } from "./github-app.js";
+import { DEFAULT_PLAYBOOK_ID } from "./playbooks.js";
 import type { ScanProfile } from "./profiles.js";
 import { fetchRunSchema, startRunSchema } from "./schemas.js";
 import type { SessionStore } from "./session.js";
@@ -17,7 +18,7 @@ export type StartRunFailure = {
   message: string;
   requested?: {
     repo: GitHubRepoRef | null;
-    playbook: string | null;
+    playbook: string;
     profile: ScanProfile;
     threat: string | null;
     threatRole: "pin";
@@ -87,7 +88,7 @@ export function startRun(input: unknown, session?: SessionStore): StartRunFailur
     message: SCAN_INFRA_MESSAGE,
     requested: {
       repo,
-      playbook: playbook ?? null,
+      playbook: playbook ?? DEFAULT_PLAYBOOK_ID,
       profile,
       threat: threat ?? null,
       threatRole: "pin",

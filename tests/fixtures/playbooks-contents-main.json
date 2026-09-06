@@ -1,0 +1,35 @@
+[
+  {
+    "type": "file",
+    "size": 1066,
+    "name": "LICENSE",
+    "path": "LICENSE",
+    "sha": "1bfbb42a6dd5e646738a3bfa50489a00b1bf9270",
+    "url": "https://api.github.com/repos/midkernel/playbooks/contents/LICENSE?ref=9ba386f1fb53535fec1c694329db5ee401fe0b74",
+    "git_url": "https://api.github.com/repos/midkernel/playbooks/git/blobs/1bfbb42a6dd5e646738a3bfa50489a00b1bf9270",
+    "html_url": "https://github.com/midkernel/playbooks/blob/9ba386f1fb53535fec1c694329db5ee401fe0b74/LICENSE",
+    "download_url": "https://raw.githubusercontent.com/midkernel/playbooks/9ba386f1fb53535fec1c694329db5ee401fe0b74/LICENSE"
+  },
+  {
+    "type": "file",
+    "size": 734,
+    "name": "README.md",
+    "path": "README.md",
+    "sha": "44ba8d10dc77862f943f0b57c539c07b38c11a8a",
+    "url": "https://api.github.com/repos/midkernel/playbooks/contents/README.md?ref=9ba386f1fb53535fec1c694329db5ee401fe0b74",
+    "git_url": "https://api.github.com/repos/midkernel/playbooks/git/blobs/44ba8d10dc77862f943f0b57c539c07b38c11a8a",
+    "html_url": "https://github.com/midkernel/playbooks/blob/9ba386f1fb53535fec1c694329db5ee401fe0b74/README.md",
+    "download_url": "https://raw.githubusercontent.com/midkernel/playbooks/9ba386f1fb53535fec1c694329db5ee401fe0b74/README.md"
+  },
+  {
+    "type": "file",
+    "size": 199,
+    "name": "security-review.md",
+    "path": "security-review.md",
+    "sha": "7b2b1ce3d169d13af18dccb2fa8b9b6c8ab832dc",
+    "url": "https://api.github.com/repos/midkernel/playbooks/contents/security-review.md?ref=9ba386f1fb53535fec1c694329db5ee401fe0b74",
+    "git_url": "https://api.github.com/repos/midkernel/playbooks/git/blobs/7b2b1ce3d169d13af18dccb2fa8b9b6c8ab832dc",
+    "html_url": "https://github.com/midkernel/playbooks/blob/9ba386f1fb53535fec1c694329db5ee401fe0b74/security-review.md",
+    "download_url": "https://raw.githubusercontent.com/midkernel/playbooks/9ba386f1fb53535fec1c694329db5ee401fe0b74/security-review.md"
+  }
+]

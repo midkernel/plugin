@@ -11,7 +11,7 @@ Tracker: [midkernel/website#17](https://github.com/midkernel/website/issues/17).
 | Tool | What |
 | --- | --- |
 | `connect_repo` | Select `owner` + `name`, or list installation repos. Read-only GitHub App — **stubbed**. |
-| `list_playbooks` | Workflows from public [`midkernel/playbooks`](https://github.com/midkernel/playbooks). Shell registry → empty list + note. |
+| `list_playbooks` | Workflows from public [`midkernel/playbooks`](https://github.com/midkernel/playbooks). Default playbook is `security-review` from the public registry. Shell registry → empty list + note. |
 | `start_run` | **profile required:** `low` \| `balanced` \| `max`. `threat` is an optional **pin**, not a fourth profile. Always `SCAN_INFRA_UNAVAILABLE` until scan infra exists. Credits meter hosted runs (no Stripe here). |
 | `fetch_run` | Status + report. Unavailable / not found. No invented findings. |
 

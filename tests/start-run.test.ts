@@ -50,12 +50,21 @@ describe("start_run", () => {
     });
   });
 
+  it("uses security-review when the user does not name a playbook", () => {
+    const result = startRun({ profile: "balanced" });
+    expect(result.ok).toBe(false);
+    expect(result.error).toBe(ErrorCode.SCAN_INFRA_UNAVAILABLE);
+    expect(result.requested?.playbook).toBe("security-review");
+    expect(looksLikeFakeSuccess(result)).toBe(false);
+  });
+
   it("uses the session-selected repo when owner/name are omitted", () => {
     const session = new SessionStore();
     session.setSelectedRepo({ owner: "acme", name: "widgets" });
 
     const result = startRun({ profile: "low" }, session);
     expect(result.requested?.repo).toEqual({ owner: "acme", name: "widgets" });
+    expect(result.requested?.playbook).toBe("security-review");
     expect(result.error).toBe(ErrorCode.SCAN_INFRA_UNAVAILABLE);
   });
 

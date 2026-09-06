@@ -26,15 +26,15 @@ This plugin is a distribution surface for Midkernel Scan (same pattern as Neon /
 ## Tools
 
 1. `connect_repo` — select `owner` + `name`, or omit both to list repos on the read-only GitHub App installation. The App API is stubbed in v0; IT owns OAuth and scopes.
-2. `list_playbooks` — workflows from the public registry https://github.com/midkernel/playbooks. A shell registry returns an empty list and a note.
-3. `start_run` — **profile required**: `low` | `balanced` | `max`. Optional `threat` is a **pin** (threat id or class), not a fourth profile. Credits meter hosted runs — tell the user a real run spends credits. Do not invent prices. Hosted execute is not issued: this tool returns `SCAN_INFRA_UNAVAILABLE` and must not be treated as a successful job.
+2. `list_playbooks` — workflows from the public registry https://github.com/midkernel/playbooks. Prefer `security-review` as the default Midkernel Scan playbook; it runs `/security-review` one-shot. Other published playbooks are allowed when the user asks. A shell registry returns an empty list and a note.
+3. `start_run` — **profile required**: `low` | `balanced` | `max`. When the user does not name a workflow, use `security-review`. Optional `threat` is a **pin** (threat id or class), not a fourth profile. Credits meter hosted runs — tell the user a real run spends credits. Do not invent prices. Hosted execute is not issued: this tool returns `SCAN_INFRA_UNAVAILABLE` and must not be treated as a successful job.
 4. `fetch_run` — status + report. Without a real backend this is unavailable / not found. Do not invent findings.
 
 ## How to run a scan (when infra exists)
 
 1. Confirm the Midkernel connector is installed.
 2. `connect_repo` for the repository the user named.
-3. `list_playbooks` and pick a workflow if the user did not specify one.
+3. `list_playbooks` and pick a workflow if the user did not specify one. Prefer `security-review` as the default Midkernel Scan playbook; it runs `/security-review` one-shot. Use another published playbook only when the user asks.
 4. Ask for a profile if missing. Never coerce `threat` into a profile.
 5. Mention that credits meter the run. Then `start_run`.
 6. `fetch_run` for status and the report with the complete log.
