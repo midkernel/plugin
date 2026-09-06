@@ -125,10 +125,12 @@ Agreed URLs the app will host (prefix `MIDKERNEL_APP_URL`):
 | Revoke | not hosted (optional; do not require) |
 | Remote MCP | `/mcp` |
 
-Cursor redirect URIs to register on the app AS:
+IT production redirect allowlist (exact):
 
-- `https://www.cursor.com/agents/mcp/oauth/callback`
-- `http://localhost:8787/callback`
+- `https://www.cursor.com/agents/mcp/oauth/callback` (Cursor Agents)
+- `https://www.cursor.com/bot/mcp/oauth/callback` (Grok Bot)
+
+DCR may accept `localhost` / `cursor://` / `vscode://` locally. Those are optional and **not** on the production allowlist. Do not invent other redirect URIs.
 
 `mcp.json` includes `midkernel-remote` with `auth.CLIENT_ID` + scope `scan`. Discovery uses authorize/token/register from AS metadata when present (hardcoded paths are fallbacks only). If AS routes are not live, helpers return **`AUTH_NOT_CONFIGURED`** and never invent a token or run.
 

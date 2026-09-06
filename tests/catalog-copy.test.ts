@@ -58,6 +58,9 @@ describe("signed catalog copy", () => {
     expect(readme).toContain("/api/oauth/token");
     expect(readme).toContain("/api/oauth/register");
     expect(readme).toContain("/api/playbooks");
+    expect(readme).toContain("https://www.cursor.com/agents/mcp/oauth/callback");
+    expect(readme).toContain("https://www.cursor.com/bot/mcp/oauth/callback");
+    expect(readme).not.toContain("http://localhost:8787/callback");
     expect(readme).not.toMatch(/accounts\.google\.com/);
   });
 

@@ -19,9 +19,12 @@
  * When discovery succeeds, authorize/token/register URLs come from metadata.
  * Hardcoded paths are fallbacks only. Never invent endpoints.
  *
- * Cursor redirect URIs to register on the app AS:
+ * IT production redirect allowlist (exact):
  *   https://www.cursor.com/agents/mcp/oauth/callback
- *   http://localhost:8787/callback
+ *   https://www.cursor.com/bot/mcp/oauth/callback
+ * DCR may also accept localhost / cursor:// / vscode://; those are
+ * optional and not required on the production allowlist. Do not invent
+ * other redirect URIs.
  */
 
 import { joinAppUrl, type FetchLike } from "./config.js";
@@ -40,9 +43,20 @@ export const MIDKERNEL_AS_PATHS = {
 
 export const MIDKERNEL_AS_SCOPES = ["scan"] as const;
 
+/** IT-confirmed production allowlist. Exact URIs only. */
 export const CURSOR_MCP_REDIRECT_URIS = [
   "https://www.cursor.com/agents/mcp/oauth/callback",
-  "http://localhost:8787/callback",
+  "https://www.cursor.com/bot/mcp/oauth/callback",
+] as const;
+
+/**
+ * DCR defaults the app may accept locally. Not on the IT production allowlist.
+ * Schemes only — do not invent concrete callback paths.
+ */
+export const OAUTH_DCR_OPTIONAL_REDIRECT_SCHEMES = [
+  "http://localhost",
+  "cursor:",
+  "vscode:",
 ] as const;
 
 export type MidkernelAsUrls = {

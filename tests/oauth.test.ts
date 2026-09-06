@@ -6,6 +6,7 @@ import {
   authorizationServerMetadataDocument,
   buildAuthorizationRequest,
   CURSOR_MCP_REDIRECT_URIS,
+  OAUTH_DCR_OPTIONAL_REDIRECT_SCHEMES,
   discoverAuthorizationServer,
   exchangeAuthorizationCode,
   isGoogleIdpUrl,
@@ -42,7 +43,16 @@ describe("Midkernel-as-AS client", () => {
     expect(MIDKERNEL_AS_PATHS.register).toBe("/api/oauth/register");
     expect(MIDKERNEL_AS_PATHS).not.toHaveProperty("revoke");
     expect(MIDKERNEL_AS_IDP).toBe("midkernel");
-    expect(CURSOR_MCP_REDIRECT_URIS).toContain("https://www.cursor.com/agents/mcp/oauth/callback");
+    expect([...CURSOR_MCP_REDIRECT_URIS]).toEqual([
+      "https://www.cursor.com/agents/mcp/oauth/callback",
+      "https://www.cursor.com/bot/mcp/oauth/callback",
+    ]);
+    expect(CURSOR_MCP_REDIRECT_URIS).not.toContain("http://localhost:8787/callback");
+    expect([...OAUTH_DCR_OPTIONAL_REDIRECT_SCHEMES]).toEqual([
+      "http://localhost",
+      "cursor:",
+      "vscode:",
+    ]);
   });
 
   it("does not treat Google as the Cursor IdP", () => {
@@ -221,6 +231,7 @@ describe("Midkernel-as-AS client", () => {
       not_idp: string;
       paths: Record<string, string>;
       revocation_endpoint: null;
+      cursor_redirect_uris: string[];
     };
     const mcp = JSON.parse(readFileSync("mcp.json", "utf8")) as {
       mcpServers: { "midkernel-remote": { url: string; auth: { scopes: string[] } } };
@@ -231,6 +242,11 @@ describe("Midkernel-as-AS client", () => {
     expect(metadata.paths.token_endpoint).toBe("/api/oauth/token");
     expect(metadata.paths.registration_endpoint).toBe("/api/oauth/register");
     expect(metadata.revocation_endpoint).toBeNull();
+    expect(metadata.cursor_redirect_uris).toEqual([
+      "https://www.cursor.com/agents/mcp/oauth/callback",
+      "https://www.cursor.com/bot/mcp/oauth/callback",
+    ]);
+    expect(metadata.cursor_redirect_uris).not.toContain("http://localhost:8787/callback");
     expect(mcp.mcpServers["midkernel-remote"].url).toBe("${MIDKERNEL_APP_URL}/mcp");
     expect(mcp.mcpServers["midkernel-remote"].auth.scopes).toEqual(["scan"]);
   });
