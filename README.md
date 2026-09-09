@@ -2,9 +2,9 @@
 
 Cursor / Grok Bot **plugin** for Midkernel Scan. Catalog name: **Midkernel**. One OAuth MCP connector + skills (same pattern as Neon / Vercel). Not a third product. Not a new bot teammate.
 
-v0 talks to **midkernel/app Scan APIs** when `MIDKERNEL_APP_URL` and auth are set (`POST /api/scans/start`, `GET /api/runs/:id`, `GET /api/repos`, `GET /api/playbooks`). That is the real one-shot `security-review` path. **AWS ECS agentflow is still unissued** and is not faked. Without URL/auth this package returns `SCAN_INFRA_UNAVAILABLE` / `AUTH_NOT_CONFIGURED` — it does not invent a successful run, job ids, or findings.
+v0 talks to **midkernel/app Scan APIs** when `MIDKERNEL_APP_URL` and auth are set (`POST /api/scans/start`, `GET /api/runs/:id`, `GET /api/repos`, `GET /api/playbooks`). That is the real one-shot `security-review` path. **Production Scan is live**: app HTTP → native AWS ECS agentflow → `report.md`. This plugin does not invent a run. Without URL/auth this package returns `SCAN_INFRA_UNAVAILABLE` / `AUTH_NOT_CONFIGURED` — local without auth still fails closed.
 
-Tracker: [midkernel/website#17](https://github.com/midkernel/website/issues/17). Coordinate with [midkernel/app#13](https://github.com/midkernel/app/pull/13) (run routes). Midkernel-as-AS routes may still be unmerged — the client is wired to the agreed paths and fails closed.
+Signed catalog copy: [midkernel/website#17](https://github.com/midkernel/website/issues/17). Coordinate with [midkernel/app#13](https://github.com/midkernel/app/pull/13) (run routes). Midkernel-as-AS: the client is wired to the agreed paths and fails closed when auth is missing.
 
 ## Tools
 
@@ -15,14 +15,14 @@ Tracker: [midkernel/website#17](https://github.com/midkernel/website/issues/17).
 | `start_run` | **profile required:** `low` \| `balanced` \| `max`. `threat` is an optional **pin**, not a fourth profile. Calls the app when URL/auth are configured. Credits meter hosted runs (no Stripe here). |
 | `fetch_run` | Status + report from the app. Report only after a real model pass. No invented findings. |
 
-Out of this package: Threat Intel tools, Stripe, AWS ECS agentflow, Google-as-Cursor-IdP.
+Out of this package: Threat Intel tools, Stripe, Google-as-Cursor-IdP. Hosted Scan uses Production ECS agentflow via midkernel/app; this plugin does not call ECS itself.
 
-## Real path vs AWS-still-missing
+## Hosted path (live)
 
 | Path | Status |
 | --- | --- |
-| **v0 one-shot** (`security-review` via midkernel/app HTTP) | Real when `MIDKERNEL_APP_URL` + Midkernel OAuth or `MIDKERNEL_API_TOKEN` are set. Mapped from the app. Tests mock HTTP. |
-| **AWS ECS agentflow** | Still missing (infra draft). This plugin does not invent agentflow success. |
+| **Production Scan** (app HTTP → native ECS agentflow → `report.md`) | Live when `MIDKERNEL_APP_URL` + Midkernel OAuth or `MIDKERNEL_API_TOKEN` are set. Mapped from the app. Tests mock HTTP. |
+| **Local without auth** | Fails closed: `SCAN_INFRA_UNAVAILABLE` / `AUTH_NOT_CONFIGURED`. This plugin does not invent a successful run. |
 
 ## Catalog (signed copy)
 
@@ -39,6 +39,17 @@ After install: Connect your Midkernel account, then pick a repository. The GitHu
 Micro: Read-only GitHub app · credits per run · no write access
 
 Do not invent prices. Do not knock free Threat Intel. Do not use a third product name or a public byline.
+
+## Marketplace submit
+
+This repo **is** the Cursor / Grok Bot plugin package. Marketing/Eng submit from here. Do not invent a Cursor dashboard URL.
+
+- Manifest: `.cursor-plugin/plugin.json` (catalog name `midkernel`, locked blurb, version `0.1.0`)
+- Skill + locked catalog strings: `skills/scan-repo/SKILL.md`
+- Remote MCP: `{MIDKERNEL_APP_URL}/mcp` plus Midkernel OAuth (`mcp.json` `midkernel-remote`)
+- The listing repo must be public for [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish)
+
+Do not rewrite the locked name / blurb / skill / installConfirm / afterInstall / micro strings above.
 
 ## Skill
 

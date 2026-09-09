@@ -50,9 +50,17 @@ describe("signed catalog copy", () => {
     expect(readme).toMatch(/default playbook is `security-review` from the public registry/i);
   });
 
-  it("documents the real app path vs AWS-still-missing without inventing prices", () => {
+  it("documents the live Production Scan path without inventing prices", () => {
     expect(readme).toMatch(/v0 talks to \*\*midkernel\/app Scan APIs\*\*/i);
-    expect(readme).toMatch(/AWS ECS agentflow is still unissued/i);
+    expect(readme).toMatch(/Production Scan is live/i);
+    expect(readme).toMatch(/app HTTP/i);
+    expect(readme).toMatch(/ECS agentflow/i);
+    expect(readme).toMatch(/report\.md/i);
+    expect(readme).not.toMatch(/AWS ECS agentflow is still unissued/i);
+    expect(readme).not.toMatch(/AWS-still-missing/i);
+    expect(readme).not.toMatch(/Not a publish go/i);
+    expect(skill).not.toMatch(/Not a publish go/i);
+    expect(skill).not.toMatch(/AWS ECS agentflow is still unissued/i);
     expect(readme).toMatch(/Midkernel-as-AS/i);
     expect(readme).toContain("/oauth/authorize");
     expect(readme).toContain("/api/oauth/token");
@@ -60,6 +68,8 @@ describe("signed catalog copy", () => {
     expect(readme).toContain("/api/playbooks");
     expect(readme).toContain("https://www.cursor.com/agents/mcp/oauth/callback");
     expect(readme).toContain("https://www.cursor.com/bot/mcp/oauth/callback");
+    expect(readme).toContain(".cursor-plugin/plugin.json");
+    expect(readme).toContain("{MIDKERNEL_APP_URL}/mcp");
     expect(readme).not.toContain("http://localhost:8787/callback");
     expect(readme).not.toMatch(/accounts\.google\.com/);
   });
