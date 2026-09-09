@@ -21,7 +21,7 @@ Connect your Midkernel account, then pick a repository. The GitHub app is read-o
 
 Read-only GitHub app · credits per run · no write access
 
-This plugin is a distribution surface for Midkernel Scan (same pattern as Neon / Vercel: one connector + skills). Not a publish go. Do not invent prices. Do not say a third product name, dollar amounts, knock free Threat Intel, or use a public byline.
+This plugin is a distribution surface for Midkernel Scan (same pattern as Neon / Vercel: one connector + skills). Hosted Production Scan is live (app HTTP → native ECS agentflow → `report.md`). Do not invent prices. Do not say a third product name, dollar amounts, knock free Threat Intel, or use a public byline.
 
 ## Tools
 
@@ -39,7 +39,7 @@ This plugin is a distribution surface for Midkernel Scan (same pattern as Neon /
 5. Mention that credits meter the run. Then `start_run`.
 6. `fetch_run` for status and the report with the complete log.
 
-If the tool returns `AUTH_NOT_CONFIGURED` or `SCAN_INFRA_UNAVAILABLE`, stop. Do not pretend agentflow ran. AWS ECS agentflow is still unissued; v0 is the app one-shot.
+If the tool returns `AUTH_NOT_CONFIGURED` or `SCAN_INFRA_UNAVAILABLE`, stop. Production Scan is live (app HTTP → native ECS agentflow → `report.md`); local without auth still fails closed. Do not invent a successful run.
 
 ## Do not
 
