@@ -78,7 +78,7 @@ export function createServer(session = new SessionStore()): McpServer {
         "threat is an optional pin (threat id or class string), not a fourth profile. " +
         "Credits meter hosted runs — mention credit spend to the user; this plugin does not implement Stripe. " +
         "Requires MIDKERNEL_APP_URL plus Midkernel OAuth or MIDKERNEL_API_TOKEN. " +
-        "Does not invent job ids or findings. AWS ECS agentflow is still unissued; v0 is the app one-shot.",
+        "Does not invent job ids or findings. Hosted Production Scan is live (app HTTP → native ECS agentflow → report.md); local without auth fails closed.",
       inputSchema: startRunSchema,
     },
     async (args) => {
