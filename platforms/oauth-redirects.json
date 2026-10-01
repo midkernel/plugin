@@ -50,7 +50,7 @@
       "template": "http://localhost/callback",
       "hosts": ["Claude Code"],
       "allowlist": "port-agnostic-loopback",
-      "when": "Claude Code declares this redirect in its Client ID Metadata Document. Match it with the port component ignored. An ephemeral example in the Claude docs is http://localhost:3118/callback; that port is an illustration, not an allowlist entry."
+      "when": "Claude Code declares this redirect in its Client ID Metadata Document. Match it with the port component ignored. The Claude docs illustrate an ephemeral port on this path; that port is not an allowlist entry."
     },
     {
       "template": "http://127.0.0.1/callback",
