@@ -1,10 +1,13 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { CATALOG } from "./catalog-copy.test.js";
+
+const cursorManifest = JSON.parse(readFileSync(".cursor-plugin/plugin.json", "utf8")) as {
+  description: string;
+};
 
 const HOSTED_MCP = "https://www.midkernel.com/app/mcp";
 const DOCS = "https://midkernel.com/docs/mcp";
-const BLURB = CATALOG.blurb;
+const BLURB = cursorManifest.description;
 const NAME_PATTERN = /^(?!.*(?:--|\\.\\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
 const TOOLS = ["connect_repo", "list_playbooks", "start_run", "fetch_run"] as const;
 
