@@ -1,0 +1,94 @@
+{
+  "verified_on": "2026-10-01",
+  "docs": "https://midkernel.com/docs/mcp",
+  "hosted_mcp": "https://www.midkernel.com/app/mcp",
+  "issuer": "https://www.midkernel.com/app",
+  "scope": "scan",
+  "code_challenge_method": "S256",
+  "sources": [
+    "https://developers.openai.com/plugins/build/auth",
+    "https://developers.openai.com/plugins/build/plugins",
+    "https://developers.openai.com/codex/mcp",
+    "https://claude.com/docs/connectors/building/authentication",
+    "https://code.claude.com/docs/en/mcp"
+  ],
+  "exact_redirect_uris": [
+    {
+      "uri": "https://chatgpt.com/connector_platform_oauth_redirect",
+      "hosts": ["ChatGPT", "Codex"],
+      "allowlist": "add",
+      "when": "ChatGPT and Codex select this stable redirect when authorization-server metadata sets authorization_response_iss_parameter_supported to true, the protected-resource authorization_servers entry matches issuer exactly, and every authorization response returns that iss. MCP servers published before callback-id redirects also keep this URI."
+    },
+    {
+      "uri": "https://claude.ai/api/mcp/auth_callback",
+      "hosts": ["Claude.ai", "Claude Desktop", "Claude mobile", "Cowork"],
+      "allowlist": "add",
+      "when": "Hosted Claude surfaces. Register this string exactly."
+    }
+  ],
+  "redirect_templates": [
+    {
+      "template": "https://chatgpt.com/connector/oauth/{callback_id}",
+      "prefix": "https://chatgpt.com/connector/oauth/",
+      "hosts": ["ChatGPT"],
+      "allowlist": "wait-for-management-page",
+      "when": "ChatGPT uses this callback-id URI when the authorization server does not meet the issuer-identification requirements above. {callback_id} is assigned per MCP connection and shown on the MCP server management page. Official docs do not publish a Midkernel callback_id."
+    },
+    {
+      "template": "http://127.0.0.1/callback",
+      "hosts": ["Codex CLI"],
+      "allowlist": "port-agnostic-loopback",
+      "when": "Codex displays and stores this callback when the authorization server advertises issuer identification. Codex omits the port from this URL and inserts the active listener port during authorization. Authorization servers must accept variable loopback ports under RFC 8252 section 7.3. This port substitution applies to http://127.0.0.1 and does not apply to the hostname localhost."
+    },
+    {
+      "template": "http://127.0.0.1/callback/{callback_id}",
+      "hosts": ["Codex CLI"],
+      "allowlist": "wait-for-codex-mcp-add",
+      "when": "When issuer identification is not advertised, Codex appends a server-specific callback id derived from the MCP server URL. Register the exact callback printed by codex mcp add. Docs do not publish that id for https://www.midkernel.com/app/mcp."
+    },
+    {
+      "template": "http://localhost/callback",
+      "hosts": ["Claude Code"],
+      "allowlist": "port-agnostic-loopback",
+      "when": "Claude Code declares this redirect in its Client ID Metadata Document. Match it with the port component ignored. An ephemeral example in the Claude docs is http://localhost:3118/callback; that port is an illustration, not an allowlist entry."
+    },
+    {
+      "template": "http://127.0.0.1/callback",
+      "hosts": ["Claude Code"],
+      "allowlist": "port-agnostic-loopback",
+      "when": "Claude Code declares this redirect in its Client ID Metadata Document. Match it with the port component ignored, alongside http://localhost/callback."
+    }
+  ],
+  "client_id_urls_not_redirects": [
+    {
+      "url": "https://chatgpt.com/oauth/client.json",
+      "when": "ChatGPT CIMD client_id when issuer identification is met."
+    },
+    {
+      "url": "https://chatgpt.com/oauth/{callback_id}/client.json",
+      "when": "ChatGPT CIMD client_id when issuer identification is not met."
+    },
+    {
+      "url": "https://chatgpt.com/oauth/codex/client.json",
+      "when": "Codex CLI stable CIMD client_id when issuer identification is met."
+    },
+    {
+      "url": "https://chatgpt.com/oauth/codex/{callback_id}/client.json",
+      "when": "Codex CLI CIMD client_id when issuer identification is not met."
+    }
+  ],
+  "live_metadata_observed": {
+    "observed_on": "2026-10-01",
+    "mcp_unauthenticated_status": 401,
+    "www_authenticate": "Bearer realm=\"midkernel\", resource_metadata=\"https://www.midkernel.com/app/.well-known/oauth-protected-resource\"",
+    "issuer": "https://www.midkernel.com/app",
+    "authorization_response_iss_parameter_supported_present": false,
+    "client_id_metadata_document_supported_present": false,
+    "code_challenge_methods_supported": ["S256"],
+    "scopes_supported": ["scan"],
+    "token_endpoint_auth_methods_supported": ["none"],
+    "registration_endpoint_present": true,
+    "protected_resource_resource": "https://www.midkernel.com/app",
+    "claude_resource_matches_mcp_url": false
+  }
+}

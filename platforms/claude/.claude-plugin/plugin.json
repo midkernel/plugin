@@ -1,0 +1,15 @@
+{
+  "name": "midkernel",
+  "displayName": "Midkernel",
+  "version": "0.1.0",
+  "description": "Scan a GitHub repository from your agent. Midkernel Scan runs an open workflow in an isolated sandbox and returns a report with the complete log. Credits meter the run.",
+  "author": {
+    "name": "Midkernel",
+    "url": "https://midkernel.com"
+  },
+  "homepage": "https://midkernel.com/docs/mcp",
+  "repository": "https://github.com/midkernel/plugin",
+  "keywords": ["scan", "security", "mcp"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

@@ -64,6 +64,12 @@ src/oauth-metadata.json      agreed authorize/token/MCP paths
 assets/icon.svg              catalog mark (source)
 assets/icon.png              catalog tile (512, Void + phosphor)
 skills/scan-repo/SKILL.md    scan skill
+platforms/chatgpt/           ChatGPT portable plugin (shared public directory)
+platforms/codex/             Codex portable + .codex-plugin compatibility layout
+platforms/claude/            Claude Code plugin + remote HTTP MCP
+platforms/OAUTH-REDIRECTS.md verified redirect URIs for IT (app#260)
+.agents/plugins/marketplace.json
+.claude-plugin/marketplace.json
 src/                         TypeScript MCP server (@modelcontextprotocol/sdk)
 tests/                       mocked app HTTP; no invented start_run success
 ```
@@ -144,6 +150,23 @@ IT production redirect allowlist (exact):
 DCR may accept `localhost` / `cursor://` / `vscode://` locally. Those are optional and **not** on the production allowlist. Do not invent other redirect URIs.
 
 `mcp.json` includes `midkernel-remote` with `auth.CLIENT_ID` + scope `scan`. Discovery uses authorize/token/register from AS metadata when present (hardcoded paths are fallbacks only). If AS routes are not live, helpers return **`AUTH_NOT_CONFIGURED`** and never invent a token or run.
+
+## ChatGPT, Codex, and Claude
+
+These hosts use the **existing** hosted Scan MCP (`https://www.midkernel.com/app/mcp`) and Midkernel OAuth (issuer `https://www.midkernel.com/app`, PKCE S256, scope `scan`). Tools stay `connect_repo`, `list_playbooks`, `start_run`, `fetch_run`. Install notes:
+
+- ChatGPT: `platforms/chatgpt/README.md`
+- Codex: `platforms/codex/README.md`
+- Claude: `platforms/claude/README.md`
+
+Product docs: https://midkernel.com/docs/mcp
+
+Verified OAuth redirect URIs for IT ([midkernel/app#260](https://github.com/midkernel/app/issues/260)) are in `platforms/OAUTH-REDIRECTS.md`. Exact strings from current platform docs:
+
+- `https://chatgpt.com/connector_platform_oauth_redirect` (ChatGPT and Codex, when the authorization server advertises RFC 9207 issuer identification)
+- `https://claude.ai/api/mcp/auth_callback` (claude.ai, Claude Desktop, Claude mobile, Cowork)
+
+ChatGPT’s callback-id form (`https://chatgpt.com/connector/oauth/{callback_id}`) and Codex CLI’s loopback callback are templates until the host prints the finished URI. Claude Code keeps port-agnostic `http://localhost/callback` and `http://127.0.0.1/callback`. This repo does not change the Production allowlist.
 
 ## Ownership
 

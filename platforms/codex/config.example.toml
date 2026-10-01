@@ -1,0 +1,10 @@
+# Codex CLI / IDE / ChatGPT desktop shared MCP config.
+# Docs: https://developers.openai.com/codex/mcp
+# Copy the table into ~/.codex/config.toml or a trusted project's .codex/config.toml.
+# OAuth is the default. Leave client_id unset so Codex uses CIMD or dynamic registration.
+# Copy the callback URL that `codex mcp add` prints into the Midkernel allowlist.
+# See ../OAUTH-REDIRECTS.md. Docs: https://midkernel.com/docs/mcp
+
+[mcp_servers.midkernel]
+url = "https://www.midkernel.com/app/mcp"
+enabled_tools = ["connect_repo", "list_playbooks", "start_run", "fetch_run"]
