@@ -13,7 +13,7 @@ Portable Agent Plugins package for the hosted Midkernel Scan MCP. ChatGPT and Co
 
 Manifest shape follows [Package your plugin](https://developers.openai.com/plugins/build/plugins): root `plugin.json` (`https://agent-plugins.org/schemas/1.0.0/plugin.schema.json`) and root `mcp.json` (`type: streamable-http`). OAuth is discovered from the MCP server. There is no `.app.json` and no pre-registered `plugin_asdk_app` id in this spike.
 
-`interface.shortDescription` is `Scan a GitHub repository` (25 characters). OpenAI final directory submission limits that field to 30 characters. `description` and `interface.longDescription` keep the full signed catalog blurb. Privacy-policy and terms URLs are omitted: `https://midkernel.com/privacy` and `https://midkernel.com/terms` returned 404 on 2026-10-01. Directory submission needs Marketing to supply those HTTPS URLs. This spike does not submit the listing.
+`interface.shortDescription` is `Scan a GitHub repository` (25 characters). OpenAI final directory submission limits that field to 30 characters. `description` and `interface.longDescription` keep the full signed catalog blurb. The manifests link to the published [privacy policy](https://www.midkernel.com/legal/privacy) and [terms of service](https://www.midkernel.com/legal/terms), verified on 2026-10-05. Directory submission remains with Marketing. This spike does not submit the listing.
 
 ## Install (developer mode)
 
