@@ -32,6 +32,6 @@ See [OAUTH-REDIRECTS.md](../OAUTH-REDIRECTS.md). Exact stable URI from the auth 
 
 `https://chatgpt.com/connector_platform_oauth_redirect`
 
-Production metadata observed on 2026-10-01 does not advertise `authorization_response_iss_parameter_supported`. Until it does, ChatGPT uses `https://chatgpt.com/connector/oauth/{callback_id}` and shows the finished URI on the MCP server management page. Do not invent `{callback_id}`.
+Production metadata verified on 2026-10-05 advertises `authorization_response_iss_parameter_supported: true`. The stable redirect above is supported by the deployed authorization server. Production allowlist confirmation and an actual ChatGPT OAuth flow remain tracked on app#260. If a host supplies the fallback `https://chatgpt.com/connector/oauth/{callback_id}` form, copy its finished URI; do not invent `{callback_id}`.
 
 Unauthenticated requests to the hosted MCP return HTTP 401 with `WWW-Authenticate: Bearer realm="midkernel", resource_metadata="https://www.midkernel.com/app/.well-known/oauth-protected-resource"`.

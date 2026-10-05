@@ -17,7 +17,7 @@ codex mcp add midkernel --url https://www.midkernel.com/app/mcp
 codex mcp login midkernel
 ```
 
-`codex mcp add` prints the OAuth callback to register. When the authorization server advertises issuer identification, Codex shows `http://127.0.0.1/callback` and inserts the listener port during login. When it does not, Codex appends a callback id. Production metadata on 2026-10-01 did not advertise issuer identification, so expect the callback-id form until that metadata changes. Register the printed string. See [OAUTH-REDIRECTS.md](../OAUTH-REDIRECTS.md).
+`codex mcp add` prints the OAuth callback to register. When the authorization server advertises issuer identification, Codex shows `http://127.0.0.1/callback` and inserts the listener port during login. When it does not, Codex appends a callback id. Production metadata verified on 2026-10-05 advertises issuer identification. Actual platform OAuth verification remains tracked on app#260. Register the printed string. See [OAUTH-REDIRECTS.md](../OAUTH-REDIRECTS.md).
 
 Equivalent `config.toml` table: `config.example.toml`.
 

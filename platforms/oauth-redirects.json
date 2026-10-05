@@ -78,17 +78,17 @@
     }
   ],
   "live_metadata_observed": {
-    "observed_on": "2026-10-01",
+    "observed_on": "2026-10-05",
     "mcp_unauthenticated_status": 401,
     "www_authenticate": "Bearer realm=\"midkernel\", resource_metadata=\"https://www.midkernel.com/app/.well-known/oauth-protected-resource\"",
     "issuer": "https://www.midkernel.com/app",
-    "authorization_response_iss_parameter_supported_present": false,
-    "client_id_metadata_document_supported_present": false,
+    "authorization_response_iss_parameter_supported_present": true,
+    "client_id_metadata_document_supported_present": true,
     "code_challenge_methods_supported": ["S256"],
     "scopes_supported": ["scan"],
     "token_endpoint_auth_methods_supported": ["none"],
     "registration_endpoint_present": true,
-    "protected_resource_resource": "https://www.midkernel.com/app",
-    "claude_resource_matches_mcp_url": false
+    "protected_resource_resource": "https://www.midkernel.com/app/mcp",
+    "claude_resource_matches_mcp_url": true
   }
 }

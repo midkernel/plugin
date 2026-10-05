@@ -40,4 +40,4 @@ https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=
 
 Organization settings path: Organization settings → Connectors → Add → Custom. MCP server URL: `https://www.midkernel.com/app/mcp`.
 
-Unauthenticated requests return HTTP 401 and a `WWW-Authenticate` header pointing at `https://www.midkernel.com/app/.well-known/oauth-protected-resource`. Protected-resource `resource` is currently the issuer origin. Claude’s docs ask for `resource` to equal the MCP URL including `/mcp`. That metadata alignment is tracked with the allowlist on app#260.
+Unauthenticated requests return HTTP 401 and a `WWW-Authenticate` header pointing at `https://www.midkernel.com/app/.well-known/oauth-protected-resource`. Production metadata verified on 2026-10-05 sets protected-resource `resource` to the MCP URL `https://www.midkernel.com/app/mcp`. Production allowlist confirmation and an actual Claude OAuth flow remain tracked on app#260.
