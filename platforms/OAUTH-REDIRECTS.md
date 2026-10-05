@@ -36,19 +36,17 @@ Loopback `localhost` for Claude Code ephemeral ports is already allowed in the a
 | `https://chatgpt.com/oauth/codex/client.json` | Codex CLI stable CIMD `client_id` when issuer identification is met |
 | `https://chatgpt.com/oauth/codex/{callback_id}/client.json` | Codex CLI CIMD `client_id` otherwise |
 
-## What Production metadata does today
+## Production metadata verified on 2026-10-05
 
-Unauthenticated `GET` and `POST` to `https://www.midkernel.com/app/mcp` on 2026-10-01 returned **HTTP 401** and:
+After [app#264](https://github.com/midkernel/app/pull/264) deployed, read-only checks confirmed:
 
-```
-WWW-Authenticate: Bearer realm="midkernel", resource_metadata="https://www.midkernel.com/app/.well-known/oauth-protected-resource"
-```
+- Authorization-server issuer is `https://www.midkernel.com/app`.
+- `authorization_response_iss_parameter_supported` and `client_id_metadata_document_supported` are both `true`.
+- PKCE S256, scope `scan`, `token_endpoint_auth_methods_supported: ["none"]`, and the registration endpoint remain advertised.
+- Protected-resource `resource` is `https://www.midkernel.com/app/mcp`, and `authorization_servers` contains the issuer above.
+- An unauthenticated GET to the hosted MCP returns HTTP 401 with `WWW-Authenticate: Bearer realm="midkernel", resource_metadata="https://www.midkernel.com/app/.well-known/oauth-protected-resource"`.
 
-Authorization-server metadata at `https://www.midkernel.com/app/.well-known/oauth-authorization-server` returned issuer `https://www.midkernel.com/app`, scope `scan`, `code_challenge_methods_supported: ["S256"]`, `token_endpoint_auth_methods_supported: ["none"]`, and a `registration_endpoint`. The document did not include `authorization_response_iss_parameter_supported` or `client_id_metadata_document_supported`.
-
-With that metadata, ChatGPT selects the callback-id redirect, and Codex CLI appends a callback id, until the authorization server advertises issuer identification and returns `iss`. Clients use dynamic client registration because CIMD is not advertised. The registration endpoint is present.
-
-Protected-resource `resource` is `https://www.midkernel.com/app`. Claude’s connector docs require `resource` to equal the MCP URL the user enters, including the path (`https://www.midkernel.com/app/mcp`). That match is an app metadata follow-up on app#260. This repo does not change Production.
+The deployed backend now advertises the metadata needed for issuer identification and CIMD. These discovery checks do not establish that the Production redirect allowlist has been updated or that a platform login succeeds. Those two checks remain on [app#260](https://github.com/midkernel/app/issues/260) before this draft package is marked ready.
 
 Cursor and Grok Bot redirects already on the allowlist stay as they are:
 
