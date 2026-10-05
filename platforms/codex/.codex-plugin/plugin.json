@@ -20,6 +20,8 @@
     "capabilities": ["Read-only GitHub app"],
     "websiteURL": "https://midkernel.com/docs/mcp",
     "supportURL": "https://github.com/midkernel/plugin",
+    "privacyPolicyURL": "https://www.midkernel.com/legal/privacy",
+    "termsOfServiceURL": "https://www.midkernel.com/legal/terms",
     "defaultPrompt": [
       "Scan a GitHub repository with Midkernel Scan.",
       "List Midkernel Scan playbooks, then run security-review.",

@@ -65,8 +65,8 @@ describe("ChatGPT, Codex, and Claude packaging", () => {
       expect(iface.websiteURL).toBe(DOCS);
       expect(iface.logo).toBe("./assets/icon.png");
       expect(iface.composerIcon).toBe("./assets/icon.png");
-      expect(iface).not.toHaveProperty("privacyPolicyURL");
-      expect(iface).not.toHaveProperty("termsOfServiceURL");
+      expect(iface.privacyPolicyURL).toBe("https://www.midkernel.com/legal/privacy");
+      expect(iface.termsOfServiceURL).toBe("https://www.midkernel.com/legal/terms");
       expect(manifest).not.toHaveProperty("apps");
     }
     expect(chatgpt.name).toBe("midkernel");
@@ -80,9 +80,11 @@ describe("ChatGPT, Codex, and Claude packaging", () => {
     expect(overlay.mcpServers).toBe("./.mcp.json");
     expect(overlay).not.toHaveProperty("apps");
     expect(overlay.description).toBe(BLURB);
-    const iface = overlay.interface as { displayName: string; category: string };
+    const iface = overlay.interface as Record<string, unknown>;
     expect(iface.displayName).toBe("Midkernel");
     expect(iface.category).toBe("Security");
+    expect(iface.privacyPolicyURL).toBe("https://www.midkernel.com/legal/privacy");
+    expect(iface.termsOfServiceURL).toBe("https://www.midkernel.com/legal/terms");
 
     const mcp = readJson("platforms/codex/.mcp.json");
     const servers = mcp.mcpServers as Record<string, { type: string; url: string }>;
