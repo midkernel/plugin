@@ -1,0 +1,21 @@
+{
+  "name": "midkernel",
+  "description": "Midkernel Scan on the hosted Scan MCP.",
+  "owner": {
+    "name": "Midkernel",
+    "url": "https://midkernel.com"
+  },
+  "plugins": [
+    {
+      "name": "midkernel",
+      "source": "./platforms/claude",
+      "description": "Scan a GitHub repository from your agent. Midkernel Scan runs an open workflow in an isolated sandbox and returns a report with the complete log. Credits meter the run.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Midkernel",
+        "url": "https://midkernel.com"
+      },
+      "homepage": "https://midkernel.com/docs/mcp"
+    }
+  ]
+}

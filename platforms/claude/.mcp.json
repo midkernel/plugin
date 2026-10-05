@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "midkernel": {
+      "type": "http",
+      "url": "https://www.midkernel.com/app/mcp",
+      "oauth": {
+        "scopes": "scan"
+      }
+    }
+  }
+}
