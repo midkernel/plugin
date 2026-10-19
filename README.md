@@ -113,12 +113,14 @@ See `.env.example`. Nothing here is a live credential.
 
 | Variable | Owner | Status |
 | --- | --- | --- |
-| `MIDKERNEL_APP_URL` | Engineering | App origin including `/app` in production. Alias: `SCAN_API_URL`. |
+| `MIDKERNEL_APP_URL` | Engineering | App base URL: `https://www.midkernel.com/security/app` in production. Alias: `SCAN_API_URL`. |
 | `MIDKERNEL_API_TOKEN` | Engineering / IT | Stdio bearer until Midkernel OAuth. Alias: `SCAN_API_TOKEN`. |
 | `MIDKERNEL_OAUTH_CLIENT_ID` | IT | Static Cursor remote MCP client. Midkernel AS, not Google. |
 | `GITHUB_INSTALLATION_TOKEN` | Session / app | Optional read-only installation listing fallback. |
 | `GITHUB_APP_*` | IT | App credentials stay on midkernel/app. |
 | Stripe / prices | — | Credits still meter. **Do not implement Stripe in this repo.** |
+
+Existing installs must update `MIDKERNEL_APP_URL` to `https://www.midkernel.com/security/app`. The remote MCP URL is `${MIDKERNEL_APP_URL}/mcp`; old `/app` routes are retired without redirects. See the [MCP documentation](https://www.midkernel.com/security/docs/mcp).
 
 ## OAuth / remote MCP (Midkernel-as-AS)
 
