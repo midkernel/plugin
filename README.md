@@ -155,13 +155,13 @@ DCR may accept `localhost` / `cursor://` / `vscode://` locally. Those are option
 
 ## ChatGPT, Codex, and Claude
 
-These hosts use the **existing** hosted Scan MCP (`https://www.midkernel.com/app/mcp`) and Midkernel OAuth (issuer `https://www.midkernel.com/app`, PKCE S256, scope `scan`). Tools stay `connect_repo`, `list_playbooks`, `start_run`, `fetch_run`. Install notes:
+These hosts use the **existing** hosted Scan MCP (`https://www.midkernel.com/security/app/mcp`) and Midkernel OAuth (issuer `https://www.midkernel.com/security/app`, PKCE S256, scope `scan`). Tools stay `connect_repo`, `list_playbooks`, `start_run`, `fetch_run`. Install notes:
 
 - ChatGPT: `platforms/chatgpt/README.md`
 - Codex: `platforms/codex/README.md`
 - Claude: `platforms/claude/README.md`
 
-Product docs: https://midkernel.com/docs/mcp
+Product docs: https://www.midkernel.com/security/docs/mcp
 
 Verified OAuth redirect URIs for IT ([midkernel/app#260](https://github.com/midkernel/app/issues/260)) are in `platforms/OAUTH-REDIRECTS.md`. Exact strings from current platform docs:
 

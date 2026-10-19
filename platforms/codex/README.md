@@ -1,6 +1,6 @@
 # Midkernel for Codex
 
-Codex packaging for the hosted Midkernel Scan MCP. Same server as ChatGPT and Claude. Tools stay `connect_repo`, `list_playbooks`, `start_run`, `fetch_run`. Docs: https://midkernel.com/docs/mcp.
+Codex packaging for the hosted Midkernel Scan MCP. Same server as ChatGPT and Claude. Tools stay `connect_repo`, `list_playbooks`, `start_run`, `fetch_run`. Docs: https://www.midkernel.com/security/docs/mcp.
 
 | File | Role |
 | --- | --- |
@@ -13,16 +13,16 @@ The public plugin directory is shared with ChatGPT. Submit that listing from `pl
 ## Install the hosted server in Codex CLI
 
 ```bash
-codex mcp add midkernel --url https://www.midkernel.com/app/mcp
+codex mcp add midkernel --url https://www.midkernel.com/security/app/mcp
 codex mcp login midkernel
 ```
 
-`codex mcp add` prints the OAuth callback to register. When the authorization server advertises issuer identification, Codex shows `http://127.0.0.1/callback` and inserts the listener port during login. When it does not, Codex appends a callback id. Production metadata verified on 2026-10-05 advertises issuer identification. Actual platform OAuth verification remains tracked on app#260. Register the printed string. See [OAUTH-REDIRECTS.md](../OAUTH-REDIRECTS.md).
+`codex mcp add` prints the OAuth callback to register. When the authorization server advertises issuer identification, Codex shows `http://127.0.0.1/callback` and inserts the listener port during login. When it does not, Codex appends a callback id. [IT’s 2026-10-19 checks](https://github.com/midkernel/strategy/issues/53#issuecomment-6277402939) report issuer identification for the migrated endpoint. Existing clients without a saved callback may still use an ID-specific redirect, and the ID depends on the complete MCP URL, including its path and query. Do not reuse an ID from the retired URL. The exact client callback and actual platform OAuth verification remain pending on app#260 and strategy#53; IT must confirm the emitted callback before an approved allowlist change. See [OAUTH-REDIRECTS.md](../OAUTH-REDIRECTS.md).
 
 Equivalent `config.toml` table: `config.example.toml`.
 
 ## Install the plugin folder
 
-Repo marketplace: `.agents/plugins/marketplace.json`. It lists `midkernel` (`platforms/chatgpt`) and `midkernel-codex` (this folder). In the ChatGPT desktop app, select Codex or ChatGPT Work, open Plugins, choose the Midkernel marketplace, and install one package. Both point at `https://www.midkernel.com/app/mcp`.
+Repo marketplace: `.agents/plugins/marketplace.json`. It lists `midkernel` (`platforms/chatgpt`) and `midkernel-codex` (this folder). In the ChatGPT desktop app, select Codex or ChatGPT Work, open Plugins, choose the Midkernel marketplace, and install one package. Both point at `https://www.midkernel.com/security/app/mcp`.
 
 Plugin OAuth fields `clientId` and `callbackUrl` are omitted. Codex then uses its documented default callback and CIMD or dynamic client registration. A configured client id would skip registration; this spike does not invent one.

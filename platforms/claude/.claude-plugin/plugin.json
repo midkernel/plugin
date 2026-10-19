@@ -7,7 +7,7 @@
     "name": "Midkernel",
     "url": "https://midkernel.com"
   },
-  "homepage": "https://midkernel.com/docs/mcp",
+  "homepage": "https://www.midkernel.com/security/docs/mcp",
   "repository": "https://github.com/midkernel/plugin",
   "keywords": ["scan", "security", "mcp"],
   "skills": "./skills/",
