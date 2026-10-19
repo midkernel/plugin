@@ -195,7 +195,7 @@ describe("ChatGPT, Codex, and Claude packaging", () => {
   });
 
   it("keeps packaging links, including encoded connector URLs, off retired paths", () => {
-    for (const path of ["README.md", ...packagingFiles("platforms"), ...packagingFiles(".claude-plugin"), ...packagingFiles(".agents")]) {
+    for (const path of ["README.md", ".env.example", ...packagingFiles("platforms"), ...packagingFiles(".claude-plugin"), ...packagingFiles(".agents")]) {
       expect(decodeURIComponent(read(path)), path).not.toMatch(/https:\/\/(?:www\.)?midkernel\.com\/(?:app|docs)(?:[\/\s"`.)]|$)/);
     }
     const claude = read("platforms/claude/README.md");
