@@ -14,7 +14,7 @@ const unset: PluginConfig = {
 };
 
 const configured: PluginConfig = {
-  appUrl: "https://midkernel.com/app",
+  appUrl: "https://www.midkernel.com/security/app",
   accessToken: "mk_live_test_token_ok",
   githubInstallationToken: null,
   oauthClientId: null,
@@ -132,7 +132,7 @@ describe("start_run without app URL/auth", () => {
 describe("start_run with mocked app HTTP", () => {
   it("maps a real app start response and does not invent findings", async () => {
     const fetchFn = jsonFetch((url, init) => {
-      expect(url).toBe("https://midkernel.com/app/api/scans/start");
+      expect(url).toBe("https://www.midkernel.com/security/app/api/scans/start");
       expect(init?.method).toBe("POST");
       const body = JSON.parse(init?.body ?? "{}") as Record<string, unknown>;
       expect(body).toMatchObject({

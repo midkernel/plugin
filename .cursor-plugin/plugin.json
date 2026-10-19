@@ -15,7 +15,7 @@
       "MIDKERNEL_APP_URL": {
         "type": "string",
         "title": "Midkernel app URL",
-        "description": "Base URL for Scan APIs, including Next basePath in production (https://midkernel.com/app). Local: http://localhost:3000 or http://localhost:3000/app."
+        "description": "Base URL for Scan APIs, including Next basePath in production (https://www.midkernel.com/security/app). Local: use the app server URL and its configured base path."
       },
       "MIDKERNEL_API_TOKEN": {
         "type": "string",
