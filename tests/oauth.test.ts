@@ -17,7 +17,7 @@ import {
   urlsFromMetadata,
 } from "../src/oauth.js";
 
-const APP = "https://midkernel.com/app";
+const APP = "https://www.midkernel.com/security/app";
 
 function jsonFetch(status: number, body: unknown): FetchLike {
   return async () => ({
@@ -32,12 +32,12 @@ function jsonFetch(status: number, body: unknown): FetchLike {
 describe("Midkernel-as-AS client", () => {
   it("documents authorize/token/register paths matching the app AS", () => {
     const urls = midkernelAsUrls(APP);
-    expect(urls.authorization_endpoint).toBe("https://midkernel.com/app/oauth/authorize");
-    expect(urls.token_endpoint).toBe("https://midkernel.com/app/api/oauth/token");
-    expect(urls.registration_endpoint).toBe("https://midkernel.com/app/api/oauth/register");
+    expect(urls.authorization_endpoint).toBe("https://www.midkernel.com/security/app/oauth/authorize");
+    expect(urls.token_endpoint).toBe("https://www.midkernel.com/security/app/api/oauth/token");
+    expect(urls.registration_endpoint).toBe("https://www.midkernel.com/security/app/api/oauth/register");
     expect(urls.revocation_endpoint).toBeNull();
-    expect(urls.mcp_endpoint).toBe("https://midkernel.com/app/mcp");
-    expect(urls.metadata_url).toBe("https://midkernel.com/app/.well-known/oauth-authorization-server");
+    expect(urls.mcp_endpoint).toBe("https://www.midkernel.com/security/app/mcp");
+    expect(urls.metadata_url).toBe("https://www.midkernel.com/security/app/.well-known/oauth-authorization-server");
     expect(MIDKERNEL_AS_PATHS.authorize).toBe("/oauth/authorize");
     expect(MIDKERNEL_AS_PATHS.token).toBe("/api/oauth/token");
     expect(MIDKERNEL_AS_PATHS.register).toBe("/api/oauth/register");
@@ -57,7 +57,7 @@ describe("Midkernel-as-AS client", () => {
 
   it("does not treat Google as the Cursor IdP", () => {
     expect(isGoogleIdpUrl("https://accounts.google.com/o/oauth2/v2/auth")).toBe(true);
-    expect(isGoogleIdpUrl("https://midkernel.com/app/oauth/authorize")).toBe(false);
+    expect(isGoogleIdpUrl("https://www.midkernel.com/security/app/oauth/authorize")).toBe(false);
     const metadata = authorizationServerMetadataDocument(APP);
     expect(metadata.idp).toBe("midkernel");
     expect(metadata).not.toHaveProperty("revocation_endpoint");
@@ -74,7 +74,7 @@ describe("Midkernel-as-AS client", () => {
     });
     expect(request.ok).toBeUndefined();
     if ("error" in request) throw new Error(request.message);
-    expect(request.authorization_endpoint).toBe("https://midkernel.com/app/oauth/authorize");
+    expect(request.authorization_endpoint).toBe("https://www.midkernel.com/security/app/oauth/authorize");
     expect(request.url).toContain("code_challenge_method=S256");
     expect(request.url).not.toContain("accounts.google.com");
   });
@@ -106,13 +106,13 @@ describe("Midkernel-as-AS client", () => {
     const result = await discoverAuthorizationServer(APP, jsonFetch(200, metadata));
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error(result.message);
-    expect(result.urls.token_endpoint).toBe("https://midkernel.com/app/api/oauth/token");
-    expect(result.urls.registration_endpoint).toBe("https://midkernel.com/app/api/oauth/register");
-    expect(result.urls.authorization_endpoint).toBe("https://midkernel.com/app/oauth/authorize");
+    expect(result.urls.token_endpoint).toBe("https://www.midkernel.com/security/app/api/oauth/token");
+    expect(result.urls.registration_endpoint).toBe("https://www.midkernel.com/security/app/api/oauth/register");
+    expect(result.urls.authorization_endpoint).toBe("https://www.midkernel.com/security/app/oauth/authorize");
     expect(result.urls.revocation_endpoint).toBeNull();
 
     const overlaid = urlsFromMetadata(midkernelAsUrls(APP), {
-      authorization_endpoint: "https://midkernel.com/app/oauth/authorize",
+      authorization_endpoint: "https://www.midkernel.com/security/app/oauth/authorize",
       token_endpoint: "https://example.invalid/discovered/token",
       registration_endpoint: "https://example.invalid/discovered/register",
     });
@@ -143,12 +143,12 @@ describe("Midkernel-as-AS client", () => {
         code: "code-1",
         redirectUri: CURSOR_MCP_REDIRECT_URIS[1],
         codeVerifier: "verifier",
-        tokenEndpoint: "https://midkernel.com/app/api/oauth/token",
+        tokenEndpoint: "https://www.midkernel.com/security/app/api/oauth/token",
       },
       fetchFn,
     );
     expect(ok).toMatchObject({ ok: true, access_token: "mk_oauth_access" });
-    expect(seen).toEqual(["https://midkernel.com/app/api/oauth/token"]);
+    expect(seen).toEqual(["https://www.midkernel.com/security/app/api/oauth/token"]);
   });
 
   it("falls back to /api/oauth/token when discovery urls are not passed", async () => {
@@ -175,8 +175,8 @@ describe("Midkernel-as-AS client", () => {
       fetchFn,
     );
     expect(result).toMatchObject({ ok: false, error: ErrorCode.AUTH_NOT_CONFIGURED });
-    expect(seen).toEqual(["https://midkernel.com/app/api/oauth/token"]);
-    expect(seen[0]).not.toBe("https://midkernel.com/app/oauth/token");
+    expect(seen).toEqual(["https://www.midkernel.com/security/app/api/oauth/token"]);
+    expect(seen[0]).not.toBe("https://www.midkernel.com/security/app/oauth/token");
   });
 
   it("maps a real token response and does not invent one on empty bodies", async () => {
@@ -219,7 +219,7 @@ describe("Midkernel-as-AS client", () => {
     };
     const result = await registerOAuthClient({ appUrl: APP }, fetchFn);
     expect(result).toMatchObject({ ok: true, client_id: "cid_1" });
-    expect(seen).toEqual(["https://midkernel.com/app/api/oauth/register"]);
+    expect(seen).toEqual(["https://www.midkernel.com/security/app/api/oauth/register"]);
 
     const missing = await registerOAuthClient({ appUrl: APP }, jsonFetch(200, {}));
     expect(missing).toMatchObject({ ok: false, error: ErrorCode.AUTH_NOT_CONFIGURED });
