@@ -57,7 +57,7 @@ describe("connect_repo", () => {
     session.setAccessToken("mk_live_test_token_ok");
     const result = await connectRepo({}, session, {
       config: {
-        appUrl: "https://midkernel.com/app",
+        appUrl: "https://www.midkernel.com/security/app",
         accessToken: null,
         githubInstallationToken: null,
         oauthClientId: null,
@@ -96,7 +96,7 @@ describe("connect_repo", () => {
     const session = new SessionStore();
     const result = await connectRepo({ owner: "midkernel", name: "app" }, session, {
       config: {
-        appUrl: "https://midkernel.com/app",
+        appUrl: "https://www.midkernel.com/security/app",
         accessToken: "mk_live_test_token_ok",
         githubInstallationToken: null,
         oauthClientId: null,
@@ -149,7 +149,7 @@ describe("connect_repo", () => {
 
     const result = await connectRepo({}, session, {
       config: {
-        appUrl: "https://midkernel.com/app",
+        appUrl: "https://www.midkernel.com/security/app",
         accessToken: "mk_live_test_token_ok",
         githubInstallationToken: null,
         oauthClientId: null,

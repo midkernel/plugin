@@ -7,7 +7,7 @@
  * helpers return AUTH_NOT_CONFIGURED and never invent a token or run.
  *
  * App AS paths (prefix MIDKERNEL_APP_URL; production includes Next basePath
- * `/app`, e.g. https://midkernel.com/app) — match midkernel/app oauthMetadata:
+ * `/security/app`, e.g. https://www.midkernel.com/security/app) — match midkernel/app oauthMetadata:
  *   GET  /.well-known/oauth-authorization-server
  *   GET  /.well-known/oauth-protected-resource
  *   GET  /oauth/authorize

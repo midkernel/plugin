@@ -12,27 +12,27 @@ describe("plugin config", () => {
     expect(isPlaceholderEnvValue("PLACEHOLDER_MIDKERNEL_APP_URL")).toBe(true);
     expect(isPlaceholderEnvValue("${MIDKERNEL_APP_URL}")).toBe(true);
     expect(isPlaceholderEnvValue("")).toBe(true);
-    expect(isPlaceholderEnvValue("https://midkernel.com/app")).toBe(false);
+    expect(isPlaceholderEnvValue("https://www.midkernel.com/security/app")).toBe(false);
   });
 
   it("prefers MIDKERNEL_APP_URL and MIDKERNEL_API_TOKEN over aliases", () => {
     const config = readPluginConfig({
-      MIDKERNEL_APP_URL: "https://midkernel.com/app/",
+      MIDKERNEL_APP_URL: "https://www.midkernel.com/security/app/",
       SCAN_API_URL: "https://ignored.example",
       MIDKERNEL_API_TOKEN: "mk_live_test_token_ok",
       SCAN_API_TOKEN: "ignored",
     });
-    expect(config.appUrl).toBe("https://midkernel.com/app");
+    expect(config.appUrl).toBe("https://www.midkernel.com/security/app");
     expect(config.accessToken).toBe("mk_live_test_token_ok");
     expect(isScanApiConfigured(config)).toBe(true);
   });
 
   it("joins Scan API paths onto the app base URL", () => {
-    expect(joinAppUrl("https://midkernel.com/app", "/api/scans/start")).toBe(
-      "https://midkernel.com/app/api/scans/start",
+    expect(joinAppUrl("https://www.midkernel.com/security/app", "/api/scans/start")).toBe(
+      "https://www.midkernel.com/security/app/api/scans/start",
     );
-    expect(joinAppUrl("https://midkernel.com/app/", "api/runs/abc")).toBe(
-      "https://midkernel.com/app/api/runs/abc",
+    expect(joinAppUrl("https://www.midkernel.com/security/app/", "api/runs/abc")).toBe(
+      "https://www.midkernel.com/security/app/api/runs/abc",
     );
   });
 

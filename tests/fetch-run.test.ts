@@ -12,7 +12,7 @@ const unset: PluginConfig = {
 };
 
 const configured: PluginConfig = {
-  appUrl: "https://midkernel.com/app",
+  appUrl: "https://www.midkernel.com/security/app",
   accessToken: "mk_live_test_token_ok",
   githubInstallationToken: null,
   oauthClientId: null,
@@ -86,7 +86,7 @@ describe("fetch_run with mocked app HTTP", () => {
           report: null,
           credits: { meters: true },
         },
-        "https://midkernel.com/app/api/runs/run_pending",
+        "https://www.midkernel.com/security/app/api/runs/run_pending",
       ),
     });
 
