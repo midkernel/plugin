@@ -6,7 +6,7 @@
     "name": "Midkernel",
     "url": "https://midkernel.com"
   },
-  "homepage": "https://midkernel.com/docs/mcp",
+  "homepage": "https://www.midkernel.com/security/docs/mcp",
   "repository": "https://github.com/midkernel/plugin",
   "keywords": ["scan", "security", "mcp"],
   "skills": "./skills/",
@@ -18,7 +18,7 @@
     "developerName": "Midkernel",
     "category": "Security",
     "capabilities": ["Read-only GitHub app"],
-    "websiteURL": "https://midkernel.com/docs/mcp",
+    "websiteURL": "https://www.midkernel.com/security/docs/mcp",
     "supportURL": "https://github.com/midkernel/plugin",
     "privacyPolicyURL": "https://www.midkernel.com/legal/privacy",
     "termsOfServiceURL": "https://www.midkernel.com/legal/terms",

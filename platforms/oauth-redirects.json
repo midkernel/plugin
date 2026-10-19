@@ -1,8 +1,8 @@
 {
   "verified_on": "2026-10-01",
-  "docs": "https://midkernel.com/docs/mcp",
-  "hosted_mcp": "https://www.midkernel.com/app/mcp",
-  "issuer": "https://www.midkernel.com/app",
+  "docs": "https://www.midkernel.com/security/docs/mcp",
+  "hosted_mcp": "https://www.midkernel.com/security/app/mcp",
+  "issuer": "https://www.midkernel.com/security/app",
   "scope": "scan",
   "code_challenge_method": "S256",
   "sources": [
@@ -16,13 +16,13 @@
     {
       "uri": "https://chatgpt.com/connector_platform_oauth_redirect",
       "hosts": ["ChatGPT", "Codex"],
-      "allowlist": "add",
+      "allowlist": "confirm-with-it",
       "when": "ChatGPT and Codex select this stable redirect when authorization-server metadata sets authorization_response_iss_parameter_supported to true, the protected-resource authorization_servers entry matches issuer exactly, and every authorization response returns that iss. MCP servers published before callback-id redirects also keep this URI."
     },
     {
       "uri": "https://claude.ai/api/mcp/auth_callback",
       "hosts": ["Claude.ai", "Claude Desktop", "Claude mobile", "Cowork"],
-      "allowlist": "add",
+      "allowlist": "confirm-with-it",
       "when": "Hosted Claude surfaces. Register this string exactly."
     }
   ],
@@ -44,7 +44,7 @@
       "template": "http://127.0.0.1/callback/{callback_id}",
       "hosts": ["Codex CLI"],
       "allowlist": "wait-for-codex-mcp-add",
-      "when": "When issuer identification is not advertised, Codex appends a server-specific callback id derived from the MCP server URL. Register the exact callback printed by codex mcp add. Docs do not publish that id for https://www.midkernel.com/app/mcp."
+      "when": "Codex uses an ID-specific callback when issuer identification is unavailable and for existing clients without a saved callback. The ID depends on the complete MCP URL, including path and query. Capture the exact callback for https://www.midkernel.com/security/app/mcp from the client; no concrete ID is verified here."
     },
     {
       "template": "http://localhost/callback",
@@ -78,17 +78,26 @@
     }
   ],
   "live_metadata_observed": {
-    "observed_on": "2026-10-05",
+    "observed_on": "2026-10-19",
     "mcp_unauthenticated_status": 401,
-    "www_authenticate": "Bearer realm=\"midkernel\", resource_metadata=\"https://www.midkernel.com/app/.well-known/oauth-protected-resource\"",
-    "issuer": "https://www.midkernel.com/app",
+    "www_authenticate": "Bearer realm=\"midkernel\", resource_metadata=\"https://www.midkernel.com/security/app/.well-known/oauth-protected-resource\"",
+    "issuer": "https://www.midkernel.com/security/app",
     "authorization_response_iss_parameter_supported_present": true,
     "client_id_metadata_document_supported_present": true,
     "code_challenge_methods_supported": ["S256"],
     "scopes_supported": ["scan"],
     "token_endpoint_auth_methods_supported": ["none"],
     "registration_endpoint_present": true,
-    "protected_resource_resource": "https://www.midkernel.com/app/mcp",
-    "claude_resource_matches_mcp_url": true
+    "protected_resource_resource": "https://www.midkernel.com/security/app/mcp",
+    "claude_resource_matches_mcp_url": true,
+    "evidence_source": "https://github.com/midkernel/strategy/issues/53#issuecomment-6277402939",
+    "observed_by": "IT (reported; not independently rechecked by this source change)"
+  },
+  "openai_callback_docs_reviewed_on": "2026-10-19",
+  "callback_migration": {
+    "status": "pending-host-readback-and-it-verification",
+    "note": "The MCP URL changed. Do not reuse a callback ID from the retired endpoint. ChatGPT uses the exact redirect shown in its management page. Codex derives callback IDs from the complete MCP URL, including path and query; existing clients without a saved callback may still use an ID-specific redirect despite issuer support. Capture the callback for the new URL from the applicable host/client before any approved allowlist change. No concrete new callback ID or successful platform OAuth flow was verified in this change.",
+    "production_allowlist_changed": false,
+    "platform_oauth_verified": false
   }
 }

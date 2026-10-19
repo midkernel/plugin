@@ -1,10 +1,10 @@
 # OAuth redirect URIs for IT (app#260)
 
-Verified 2026-10-01 from the platform docs linked below. Hosted Scan MCP stays `https://www.midkernel.com/app/mcp`. Issuer stays `https://www.midkernel.com/app`. PKCE is S256. Scope is `scan`. Public docs: https://midkernel.com/docs/mcp (that URL redirects to https://www.midkernel.com/docs/mcp).
+Hosted Scan MCP is `https://www.midkernel.com/security/app/mcp`; issuer is `https://www.midkernel.com/security/app`. PKCE is S256 and scope is `scan`. Public docs: https://www.midkernel.com/security/docs/mcp. OpenAI callback guidance below was rechecked on 2026-10-19; the unchanged Claude callback references were recorded on 2026-10-01.
 
 This package does not change Production allowlist env. IT owns that update on [midkernel/app#260](https://github.com/midkernel/app/issues/260).
 
-## Exact strings to add
+## Exact callback strings to confirm with IT
 
 | Redirect URI | Hosts | When the host sends it |
 | --- | --- | --- |
@@ -19,7 +19,7 @@ Official docs publish these patterns. They do not publish a finished URI for the
 | --- | --- | --- |
 | `https://chatgpt.com/connector/oauth/{callback_id}` | ChatGPT | Used when issuer identification is absent. Copy the production redirect from the MCP server management page. Prefix verified: `https://chatgpt.com/connector/oauth/`. |
 | `http://127.0.0.1/callback` | Codex CLI | Displayed and stored when issuer identification is advertised. Codex inserts the listener port at authorization time. Match any port on host `127.0.0.1` and path `/callback` (RFC 8252 §7.3). Codex docs say this port substitution does not apply to hostname `localhost`. Source: [Codex MCP](https://developers.openai.com/codex/mcp). |
-| `http://127.0.0.1/callback/{callback_id}` | Codex CLI | Used when issuer identification is absent. Codex derives `{callback_id}` from the MCP server URL. Copy the callback printed by `codex mcp add`. |
+| `http://127.0.0.1/callback/{callback_id}` | Codex CLI | Used without issuer identification and by existing clients without a saved callback. The ID depends on the complete MCP URL, including path and query. Capture the callback for the migrated URL from the client; do not reuse an old ID. |
 | `http://localhost/callback` | Claude Code | Declared in the Claude Code Client ID Metadata Document. Match with the port ignored. |
 | `http://127.0.0.1/callback` | Claude Code | Declared beside the localhost form. Match with the port ignored. |
 
@@ -36,17 +36,19 @@ Loopback `localhost` for Claude Code ephemeral ports is already allowed in the a
 | `https://chatgpt.com/oauth/codex/client.json` | Codex CLI stable CIMD `client_id` when issuer identification is met |
 | `https://chatgpt.com/oauth/codex/{callback_id}/client.json` | Codex CLI CIMD `client_id` otherwise |
 
-## Production metadata verified on 2026-10-05
+## Production metadata reported by IT on 2026-10-19
 
-After [app#264](https://github.com/midkernel/app/pull/264) deployed, read-only checks confirmed:
+[IT’s read-only hosted checks](https://github.com/midkernel/strategy/issues/53#issuecomment-6277402939) report the migrated endpoints below. This packaging update did not independently repeat those checks:
 
-- Authorization-server issuer is `https://www.midkernel.com/app`.
+- Authorization-server issuer is `https://www.midkernel.com/security/app`.
 - `authorization_response_iss_parameter_supported` and `client_id_metadata_document_supported` are both `true`.
 - PKCE S256, scope `scan`, `token_endpoint_auth_methods_supported: ["none"]`, and the registration endpoint remain advertised.
-- Protected-resource `resource` is `https://www.midkernel.com/app/mcp`, and `authorization_servers` contains the issuer above.
-- An unauthenticated GET to the hosted MCP returns HTTP 401 with `WWW-Authenticate: Bearer realm="midkernel", resource_metadata="https://www.midkernel.com/app/.well-known/oauth-protected-resource"`.
+- Protected-resource `resource` is `https://www.midkernel.com/security/app/mcp`, and `authorization_servers` contains the issuer above.
+- An unauthenticated GET to the hosted MCP returns HTTP 401 with `WWW-Authenticate: Bearer realm="midkernel", resource_metadata="https://www.midkernel.com/security/app/.well-known/oauth-protected-resource"`.
 
-The deployed backend now advertises the metadata needed for issuer identification and CIMD. These discovery checks do not establish that the Production redirect allowlist has been updated or that a platform login succeeds. Those two checks remain on [app#260](https://github.com/midkernel/app/issues/260) before this draft package is marked ready.
+These reports establish discovery readiness, not a successful platform login. The exact new callbacks, production allowlist reconciliation, and authorize → redirect → token verification remain pending with IT on [app#260](https://github.com/midkernel/app/issues/260) and [strategy#53](https://github.com/midkernel/strategy/issues/53). Keep this package draft and unmerged until its explicit hold is released.
+
+The path change can change a callback ID. Official [Codex callback guidance](https://learn.chatgpt.com/docs/extend/mcp?surface=cli) also distinguishes existing clients from newly added clients: issuer support alone does not prove that every existing client uses the stable callback. This repo records no concrete replacement ID. Capture the exact callback from the applicable host/client for the new MCP URL before any separately approved IT allowlist change. Platform-owned callback URLs must not be rewritten to Midkernel paths.
 
 Cursor and Grok Bot redirects already on the allowlist stay as they are:
 

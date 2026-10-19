@@ -3,7 +3,7 @@
   "mcpServers": {
     "midkernel": {
       "type": "streamable-http",
-      "url": "https://www.midkernel.com/app/mcp"
+      "url": "https://www.midkernel.com/security/app/mcp"
     }
   }
 }

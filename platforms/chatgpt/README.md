@@ -4,12 +4,12 @@ Portable Agent Plugins package for the hosted Midkernel Scan MCP. ChatGPT and Co
 
 | | |
 | --- | --- |
-| MCP | `https://www.midkernel.com/app/mcp` (Streamable HTTP) |
-| Issuer | `https://www.midkernel.com/app` |
+| MCP | `https://www.midkernel.com/security/app/mcp` (Streamable HTTP) |
+| Issuer | `https://www.midkernel.com/security/app` |
 | PKCE | S256 |
 | Scope | `scan` |
 | Tools | `connect_repo`, `list_playbooks`, `start_run`, `fetch_run` |
-| Docs | https://midkernel.com/docs/mcp |
+| Docs | https://www.midkernel.com/security/docs/mcp |
 
 Manifest shape follows [Package your plugin](https://developers.openai.com/plugins/build/plugins): root `plugin.json` (`https://agent-plugins.org/schemas/1.0.0/plugin.schema.json`) and root `mcp.json` (`type: streamable-http`). OAuth is discovered from the MCP server. There is no `.app.json` and no pre-registered `plugin_asdk_app` id in this spike.
 
@@ -21,7 +21,7 @@ From [Package your plugin](https://developers.openai.com/plugins/build/plugins):
 
 1. Open ChatGPT → Settings → Security and login → turn on Developer mode.
 2. Open ChatGPT Plugins → plus.
-3. Enter the MCP server URL `https://www.midkernel.com/app/mcp`.
+3. Enter the MCP server URL `https://www.midkernel.com/security/app/mcp`.
 4. Complete OAuth when ChatGPT asks. The authorization server is Midkernel (PKCE S256, scope `scan`).
 
 Repo marketplace for a local install of this folder: `.agents/plugins/marketplace.json` at the repository root. Restart the ChatGPT desktop app, open the Plugins directory, choose the Midkernel marketplace, and install **midkernel**.
@@ -32,6 +32,6 @@ See [OAUTH-REDIRECTS.md](../OAUTH-REDIRECTS.md). Exact stable URI from the auth 
 
 `https://chatgpt.com/connector_platform_oauth_redirect`
 
-Production metadata verified on 2026-10-05 advertises `authorization_response_iss_parameter_supported: true`. The stable redirect above is supported by the deployed authorization server. Production allowlist confirmation and an actual ChatGPT OAuth flow remain tracked on app#260. If a host supplies the fallback `https://chatgpt.com/connector/oauth/{callback_id}` form, copy its finished URI; do not invent `{callback_id}`.
+[IT’s 2026-10-19 checks](https://github.com/midkernel/strategy/issues/53#issuecomment-6277402939) report `authorization_response_iss_parameter_supported: true` for the migrated issuer. The exact host-selected callback, production allowlist reconciliation, and an actual ChatGPT OAuth flow remain pending on app#260 and strategy#53. If a host supplies the fallback `https://chatgpt.com/connector/oauth/{callback_id}` form, copy its finished URI; do not invent `{callback_id}`.
 
-Unauthenticated requests to the hosted MCP return HTTP 401 with `WWW-Authenticate: Bearer realm="midkernel", resource_metadata="https://www.midkernel.com/app/.well-known/oauth-protected-resource"`.
+IT reports that unauthenticated requests to the hosted MCP return HTTP 401 with `WWW-Authenticate: Bearer realm="midkernel", resource_metadata="https://www.midkernel.com/security/app/.well-known/oauth-protected-resource"`.

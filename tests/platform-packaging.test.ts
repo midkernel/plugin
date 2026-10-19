@@ -1,12 +1,14 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const cursorManifest = JSON.parse(readFileSync(".cursor-plugin/plugin.json", "utf8")) as {
   description: string;
 };
 
-const HOSTED_MCP = "https://www.midkernel.com/app/mcp";
-const DOCS = "https://midkernel.com/docs/mcp";
+const HOSTED_MCP = "https://www.midkernel.com/security/app/mcp";
+const ISSUER = "https://www.midkernel.com/security/app";
+const DOCS = "https://www.midkernel.com/security/docs/mcp";
 const BLURB = cursorManifest.description;
 const NAME_PATTERN = /^(?!.*(?:--|\\.\\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
 const TOOLS = ["connect_repo", "list_playbooks", "start_run", "fetch_run"] as const;
@@ -17,6 +19,13 @@ function readJson(path: string): Record<string, unknown> {
 
 function read(path: string): string {
   return readFileSync(path, "utf8");
+}
+
+function packagingFiles(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    return entry.isDirectory() ? packagingFiles(path) : /\.(json|md|toml)$/.test(path) ? [path] : [];
+  });
 }
 
 describe("ChatGPT, Codex, and Claude packaging", () => {
@@ -92,7 +101,7 @@ describe("ChatGPT, Codex, and Claude packaging", () => {
     expect(servers.midkernel.url).toBe(HOSTED_MCP);
 
     const example = read("platforms/codex/config.example.toml");
-    expect(example).toContain('url = "https://www.midkernel.com/app/mcp"');
+    expect(example).toContain('url = "https://www.midkernel.com/security/app/mcp"');
     expect(example).toContain("[mcp_servers.midkernel]");
   });
 
@@ -143,6 +152,19 @@ describe("ChatGPT, Codex, and Claude packaging", () => {
 
   it("records only verified exact redirect URIs", () => {
     const record = readJson("platforms/oauth-redirects.json");
+    expect(record.hosted_mcp).toBe(HOSTED_MCP);
+    expect(record.issuer).toBe(ISSUER);
+    expect(record.docs).toBe(DOCS);
+    expect(record.live_metadata_observed).toMatchObject({
+      issuer: ISSUER,
+      protected_resource_resource: HOSTED_MCP,
+      www_authenticate: `Bearer realm="midkernel", resource_metadata="${ISSUER}/.well-known/oauth-protected-resource"`,
+    });
+    expect(record.callback_migration).toMatchObject({
+      status: "pending-host-readback-and-it-verification",
+      production_allowlist_changed: false,
+      platform_oauth_verified: false,
+    });
     const exact = (record.exact_redirect_uris as Array<{ uri: string }>).map((entry) => entry.uri);
     expect(exact).toEqual([
       "https://chatgpt.com/connector_platform_oauth_redirect",
@@ -170,5 +192,15 @@ describe("ChatGPT, Codex, and Claude packaging", () => {
     expect(doc).toContain("app#260");
     expect(read("README.md")).toContain(DOCS);
     expect(read("README.md")).toContain("platforms/OAUTH-REDIRECTS.md");
+  });
+
+  it("keeps packaging links, including encoded connector URLs, off retired paths", () => {
+    for (const path of ["README.md", ...packagingFiles("platforms"), ...packagingFiles(".claude-plugin"), ...packagingFiles(".agents")]) {
+      expect(decodeURIComponent(read(path)), path).not.toMatch(/https:\/\/(?:www\.)?midkernel\.com\/(?:app|docs)(?:[\/\s"`.)]|$)/);
+    }
+    const claude = read("platforms/claude/README.md");
+    const connectorLink = claude.split("\n").find((line) => line.startsWith("https://claude.ai/customize/connectors?"));
+    expect(connectorLink).toBeDefined();
+    expect(new URL(connectorLink!).searchParams.get("connectorUrl")).toBe(HOSTED_MCP);
   });
 });
