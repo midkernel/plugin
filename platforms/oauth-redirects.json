@@ -96,7 +96,7 @@
   "openai_callback_docs_reviewed_on": "2026-10-19",
   "callback_migration": {
     "status": "pending-host-readback-and-it-verification",
-    "note": "The MCP URL changed. Do not reuse a callback ID from the retired endpoint. ChatGPT uses the exact redirect shown in its management page. Codex derives callback IDs from the complete MCP URL, including path and query; existing clients without a saved callback may still use an ID-specific redirect despite issuer support. Capture the callback for the new URL from the applicable host/client before any approved allowlist change. No concrete new callback ID or successful platform OAuth flow was verified in this change.",
+    "note": "The MCP URL changed. Do not infer callback replacement solely from that change: with issuer support, an existing configured client ID and saved callback can be reused if the authorization response returns the matching iss. ChatGPT uses the exact redirect shown in its management page. Codex derives callback IDs from the complete MCP URL, including path and query; existing clients without a saved callback may still use an ID-specific redirect despite issuer support. Capture the callback for the new URL from the applicable host/client before any approved allowlist change. No concrete new callback ID or successful platform OAuth flow was verified in this change.",
     "production_allowlist_changed": false,
     "platform_oauth_verified": false
   }
