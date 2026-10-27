@@ -152,12 +152,10 @@ DCR may accept `localhost` / `cursor://` / `vscode://` locally. Those are option
 | Surface | Owner |
 | --- | --- |
 | MCP server, plugin package, catalog listing mechanics | Engineering |
-| OAuth app (Midkernel AS), GitHub App scopes, Workspace identity (`<workspace-email>`) | IT |
+| OAuth app (Midkernel AS), GitHub App scopes, Workspace identity | IT |
 | Catalog name / blurb / install copy (company/anon; no public byline) | Marketing |
 | Plugin icon (outlined mark, phosphor once) | Design — included at `assets/icon.svg` / `assets/icon.png` |
 | Tracker + funnel | CoS |
-
-
 
 ## Credits
 
