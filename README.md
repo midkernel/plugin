@@ -1,6 +1,6 @@
 # Midkernel plugin
 
-Cursor / Grok Bot **plugin** for Midkernel Scan. Catalog name: **Midkernel**. One OAuth MCP connector + skills (same pattern as Neon / Vercel). Not a third product. Not a new bot teammate.
+Run [Midkernel Scan](https://www.midkernel.com/security/scan) on a GitHub repository from your agent: pick a repository, a workflow and a profile, and get a report with its full log. Setup is in the [MCP docs](https://www.midkernel.com/security/docs/mcp), which also cover the free, no-login Threat Intel MCP.
 
 v0 talks to **midkernel/app Scan APIs** when `MIDKERNEL_APP_URL` and auth are set (`POST /api/scans/start`, `GET /api/runs/:id`, `GET /api/repos`, `GET /api/playbooks`). That is the real one-shot `security-review` path. **Production Scan is live**: app HTTP → native AWS ECS agentflow → `report.md`. This plugin does not invent a run. Without URL/auth this package returns `SCAN_INFRA_UNAVAILABLE` / `AUTH_NOT_CONFIGURED` — local without auth still fails closed.
 
