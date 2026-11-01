@@ -160,3 +160,10 @@ DCR may accept `localhost` / `cursor://` / `vscode://` locally. Those are option
 ## Credits
 
 Credits meter a hosted Scan. Tools mention that spend. This package does not charge, invent pack sizes, or talk to Stripe.
+
+## Contributor checks
+
+Run `npm run setup:dev` to perform the locked install and enroll this worktree's
+pre-push checks. See [setup, exact coverage and limitations](docs/prepush.md) and
+[CI performance evidence](docs/ci-performance.md). Ordinary `npm ci` does not
+install Git hooks.
