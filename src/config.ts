@@ -13,12 +13,15 @@ export type PluginConfig = {
   oauthClientSecret: string | null;
 };
 
+export const APP_REQUEST_TIMEOUT_MS = 30_000;
+
 export type FetchLike = (
   input: string,
   init?: {
     method?: string;
     headers?: Record<string, string>;
     body?: string;
+    signal?: AbortSignal;
   },
 ) => Promise<{
   ok: boolean;

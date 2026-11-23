@@ -1,3 +1,5 @@
+import { APP_REQUEST_TIMEOUT_MS } from "./config.js";
+
 export const ErrorCode = {
   SCAN_INFRA_UNAVAILABLE: "SCAN_INFRA_UNAVAILABLE",
   AUTH_NOT_CONFIGURED: "AUTH_NOT_CONFIGURED",
@@ -18,3 +20,10 @@ export const AUTH_NOT_CONFIGURED_MESSAGE =
 
 export const RUN_BACKEND_MESSAGE =
   "No Midkernel app run API is configured (set MIDKERNEL_APP_URL plus auth). Status and reports cannot be fetched; no findings are invented. Hosted Production Scan is live; local without auth fails closed.";
+
+export function describeError(error: unknown): string {
+  if (error instanceof Error && error.name === "TimeoutError") {
+    return `timed out after ${APP_REQUEST_TIMEOUT_MS / 1000} s`;
+  }
+  return error instanceof Error ? error.message : String(error);
+}

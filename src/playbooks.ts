@@ -1,4 +1,5 @@
 import type { AppClient } from "./app-client.js";
+import { describeError } from "./errors.js";
 import { githubContentsSchema, githubDirSchema, type GithubContents } from "./schemas.js";
 
 export const DEFAULT_PLAYBOOKS_REPO_URL = "https://github.com/midkernel/playbooks";
@@ -151,7 +152,7 @@ export async function listPlaybooks(options?: {
       note: null,
     };
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
+    const reason = describeError(error);
     return {
       registry: repoUrl,
       playbooks: [],

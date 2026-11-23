@@ -10,8 +10,8 @@
  * Never invents a successful run, findings, or report.
  */
 
-import { joinAppUrl, type FetchLike, type PluginConfig } from "./config.js";
-import { ErrorCode } from "./errors.js";
+import { APP_REQUEST_TIMEOUT_MS, joinAppUrl, type FetchLike, type PluginConfig } from "./config.js";
+import { describeError, ErrorCode } from "./errors.js";
 import type { ScanProfile } from "./profiles.js";
 import type { InstallationRepo } from "./types.js";
 
@@ -193,118 +193,111 @@ export function createAppClient(
   const appUrl = config.appUrl;
   const token = config.accessToken;
 
+  async function request<T>(spec: {
+    path: string;
+    method: "GET" | "POST";
+    payload?: unknown;
+    runId?: string;
+    httpFailure: string;
+    unreachable: { error: ErrorCode; message: (reason: string) => string };
+    earlyFailure?: (status: number, url: string) => AppHttpError | null;
+    mapSuccess: (body: unknown) => T | AppHttpError;
+  }): Promise<T | AppHttpError> {
+    const url = joinAppUrl(appUrl, spec.path);
+    const withRunId = spec.runId === undefined ? {} : { runId: spec.runId };
+    try {
+      const response = await http(url, {
+        method: spec.method,
+        headers:
+          spec.payload === undefined
+            ? bearerHeaders(token)
+            : { ...bearerHeaders(token), "Content-Type": "application/json" },
+        ...(spec.payload === undefined ? {} : { body: JSON.stringify(spec.payload) }),
+        signal: AbortSignal.timeout(APP_REQUEST_TIMEOUT_MS),
+      });
+      const body = await readJsonBody(response);
+      const early = spec.earlyFailure?.(response.status, url);
+      if (early) return early;
+      if (!response.ok) {
+        return { ...mapAppError(response.status, body, `${spec.httpFailure} (HTTP ${response.status}).`), ...withRunId };
+      }
+      return spec.mapSuccess(body);
+    } catch (error) {
+      return {
+        ok: false,
+        error: spec.unreachable.error,
+        message: spec.unreachable.message(describeError(error)),
+        status: 0,
+        ...withRunId,
+      };
+    }
+  }
+
   return {
-    async startScan(input) {
-      const url = joinAppUrl(appUrl, APP_PATHS.startScan);
-      try {
-        const response = await http(url, {
-          method: "POST",
-          headers: {
-            ...bearerHeaders(token),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            owner: input.owner,
-            name: input.name,
-            profile: input.profile,
-            playbook: input.playbook,
-            threat: input.threat,
-          }),
-        });
-        const body = await readJsonBody(response);
-        if (!response.ok) {
-          return mapAppError(response.status, body, `Start scan failed (HTTP ${response.status}).`);
-        }
-        return mapStartSuccess(body, input);
-      } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error);
-        return {
-          ok: false,
+    startScan: (input) =>
+      request({
+        path: APP_PATHS.startScan,
+        method: "POST",
+        payload: {
+          owner: input.owner,
+          name: input.name,
+          profile: input.profile,
+          playbook: input.playbook,
+          threat: input.threat,
+        },
+        httpFailure: "Start scan failed",
+        unreachable: {
           error: ErrorCode.SCAN_INFRA_UNAVAILABLE,
-          message: `Could not reach Midkernel app Scan API (${reason}). No run was invented.`,
-          status: 0,
-        };
-      }
-    },
+          message: (reason) => `Could not reach Midkernel app Scan API (${reason}). No run was invented.`,
+        },
+        mapSuccess: (body) => mapStartSuccess(body, input),
+      }),
 
-    async fetchRun(runId) {
-      const url = joinAppUrl(appUrl, APP_PATHS.run(runId));
-      try {
-        const response = await http(url, {
-          method: "GET",
-          headers: bearerHeaders(token),
-        });
-        const body = await readJsonBody(response);
-        if (!response.ok) {
-          const mapped = mapAppError(response.status, body, `Fetch run failed (HTTP ${response.status}).`);
-          return { ...mapped, runId };
-        }
-        return mapFetchSuccess(body, runId);
-      } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error);
-        return {
-          ok: false,
+    fetchRun: (runId) =>
+      request({
+        path: APP_PATHS.run(runId),
+        method: "GET",
+        runId,
+        httpFailure: "Fetch run failed",
+        unreachable: {
           error: ErrorCode.SCAN_INFRA_UNAVAILABLE,
-          message: `Could not reach Midkernel app run API (${reason}). No findings were invented.`,
-          status: 0,
-          runId,
-        };
-      }
-    },
+          message: (reason) => `Could not reach Midkernel app run API (${reason}). No findings were invented.`,
+        },
+        mapSuccess: (body) => mapFetchSuccess(body, runId),
+      }),
 
-    async listRepos() {
-      const url = joinAppUrl(appUrl, APP_PATHS.repos);
-      try {
-        const response = await http(url, {
-          method: "GET",
-          headers: bearerHeaders(token),
-        });
-        const body = await readJsonBody(response);
-        if (response.status === 404 || response.status === 501) {
-          return {
-            ok: false,
-            error: ErrorCode.GITHUB_APP_UNAVAILABLE,
-            message: `Installation repo listing is not hosted yet (${url} → HTTP ${response.status}).`,
-            status: response.status,
-          };
-        }
-        if (!response.ok) {
-          return mapAppError(response.status, body, `Repo listing failed (HTTP ${response.status}).`);
-        }
-        return mapReposSuccess(body);
-      } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error);
-        return {
-          ok: false,
+    listRepos: () =>
+      request({
+        path: APP_PATHS.repos,
+        method: "GET",
+        httpFailure: "Repo listing failed",
+        unreachable: {
           error: ErrorCode.GITHUB_APP_UNAVAILABLE,
-          message: `Could not reach Midkernel app repo listing (${reason}).`,
-          status: 0,
-        };
-      }
-    },
+          message: (reason) => `Could not reach Midkernel app repo listing (${reason}).`,
+        },
+        earlyFailure: (status, url) =>
+          status === 404 || status === 501
+            ? {
+                ok: false,
+                error: ErrorCode.GITHUB_APP_UNAVAILABLE,
+                message: `Installation repo listing is not hosted yet (${url} → HTTP ${status}).`,
+                status,
+              }
+            : null,
+        mapSuccess: mapReposSuccess,
+      }),
 
-    async listPlaybooks() {
-      const url = joinAppUrl(appUrl, APP_PATHS.playbooks);
-      try {
-        const response = await http(url, {
-          method: "GET",
-          headers: bearerHeaders(token),
-        });
-        const body = await readJsonBody(response);
-        if (!response.ok) {
-          return mapAppError(response.status, body, `Playbook listing failed (HTTP ${response.status}).`);
-        }
-        return mapPlaybooksSuccess(body);
-      } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error);
-        return {
-          ok: false,
+    listPlaybooks: () =>
+      request({
+        path: APP_PATHS.playbooks,
+        method: "GET",
+        httpFailure: "Playbook listing failed",
+        unreachable: {
           error: ErrorCode.SCAN_INFRA_UNAVAILABLE,
-          message: `Could not reach Midkernel app playbooks API (${reason}). No playbooks were invented.`,
-          status: 0,
-        };
-      }
-    },
+          message: (reason) => `Could not reach Midkernel app playbooks API (${reason}). No playbooks were invented.`,
+        },
+        mapSuccess: mapPlaybooksSuccess,
+      }),
   };
 }
 

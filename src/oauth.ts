@@ -28,7 +28,7 @@
  */
 
 import { joinAppUrl, type FetchLike } from "./config.js";
-import { AUTH_NOT_CONFIGURED_MESSAGE, ErrorCode } from "./errors.js";
+import { AUTH_NOT_CONFIGURED_MESSAGE, describeError, ErrorCode } from "./errors.js";
 
 export const MIDKERNEL_AS_IDP = "midkernel" as const;
 
@@ -254,7 +254,7 @@ export async function discoverAuthorizationServer(
     if ("error" in urls) return urls;
     return { ok: true, metadata, urls };
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
+    const reason = describeError(error);
     return authNotConfigured(`Authorization server is not reachable (${reason}).`);
   }
 }
@@ -334,7 +334,7 @@ export async function exchangeAuthorizationCode(
       scope: typeof payload.scope === "string" ? payload.scope : null,
     };
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
+    const reason = describeError(error);
     return authNotConfigured(`Token endpoint is not reachable (${reason}).`);
   }
 }
@@ -399,7 +399,7 @@ export async function registerOAuthClient(
       client_secret: typeof payload.client_secret === "string" ? payload.client_secret : null,
     };
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
+    const reason = describeError(error);
     return authNotConfigured(`Registration endpoint is not reachable (${reason}).`);
   }
 }
