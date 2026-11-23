@@ -145,7 +145,7 @@ export async function listGithubInstallationRepos(
           defaultBranch: repo.default_branch ?? "main",
         });
       }
-      url = nextLinkFromHeader(response.headers.get("link"), url);
+      url = nextLinkFromHeader(response.headers.get("link"));
     }
 
     return {
@@ -157,7 +157,7 @@ export async function listGithubInstallationRepos(
       note: "Repositories visible to the read-only GitHub App installation token on this session.",
     };
   } catch (error) {
-    const reason = describeError(error);
+    const reason = describeError(error, { timeoutMs: APP_REQUEST_TIMEOUT_MS });
     return {
       stubbed: false,
       mock: false,
@@ -213,10 +213,10 @@ export function selectRepoAgainstList(
   };
 }
 
-function nextLinkFromHeader(link: string | null, currentUrl: string): string | null {
+function nextLinkFromHeader(link: string | null): string | null {
   if (!link) return null;
   const match = link.match(/<([^>]+)>;\s*rel="next"/);
   if (!match?.[1]) return null;
-  const next = new URL(match[1], currentUrl);
-  return next.origin === new URL(GITHUB_INSTALLATION_REPOS_URL).origin ? next.href : null;
+  const next = new URL(match[1]);
+  return next.origin === new URL(GITHUB_INSTALLATION_REPOS_URL).origin ? match[1] : null;
 }

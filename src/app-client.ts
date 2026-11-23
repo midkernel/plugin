@@ -206,6 +206,7 @@ export function createAppClient(
     const url = joinAppUrl(appUrl, spec.path);
     const withRunId = spec.runId === undefined ? {} : { runId: spec.runId };
     try {
+      const signal = AbortSignal.timeout(APP_REQUEST_TIMEOUT_MS);
       const response = await http(url, {
         method: spec.method,
         headers:
@@ -213,9 +214,10 @@ export function createAppClient(
             ? bearerHeaders(token)
             : { ...bearerHeaders(token), "Content-Type": "application/json" },
         ...(spec.payload === undefined ? {} : { body: JSON.stringify(spec.payload) }),
-        signal: AbortSignal.timeout(APP_REQUEST_TIMEOUT_MS),
+        signal,
       });
       const body = await readJsonBody(response);
+      signal.throwIfAborted();
       const early = spec.earlyFailure?.(response.status, url);
       if (early) return early;
       if (!response.ok) {
@@ -226,7 +228,7 @@ export function createAppClient(
       return {
         ok: false,
         error: spec.unreachable.error,
-        message: spec.unreachable.message(describeError(error)),
+        message: spec.unreachable.message(describeError(error, { timeoutMs: APP_REQUEST_TIMEOUT_MS })),
         status: 0,
         ...withRunId,
       };

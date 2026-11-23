@@ -50,6 +50,30 @@ describe("app client request timeout", () => {
     });
   });
 
+  it("treats a timeout while reading the body as unreachable", async () => {
+    const stalledBody: FetchLike = (_input, init) =>
+      Promise.resolve({
+        ok: false,
+        status: 500,
+        headers: new Headers(),
+        json: () =>
+          new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
+          }),
+        text: () => Promise.reject(new TypeError("Body is unusable")),
+      } as unknown as Response);
+    const client = createAppClient(config, stalledBody);
+    const pending = client.fetchRun("run_1");
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(await pending).toEqual({
+      ok: false,
+      error: "SCAN_INFRA_UNAVAILABLE",
+      message: "Could not reach Midkernel app run API (timed out after 30 s). No findings were invented.",
+      status: 0,
+      runId: "run_1",
+    });
+  });
+
   it("applies the timeout to every client method", async () => {
     const client = createAppClient(config, abortableNeverResolves());
     const results = Promise.all([
