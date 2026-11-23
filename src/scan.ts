@@ -3,7 +3,6 @@ import { createAppClient, type AppClient } from "./app-client.js";
 import {
   hasAppAuth,
   hasAppUrl,
-  isScanApiConfigured,
   readPluginConfig,
   type FetchLike,
   type PluginConfig,
@@ -322,8 +321,4 @@ export function looksLikeFakeSuccess(payload: unknown): boolean {
   if (record.findings) return true;
   if (record.report) return true;
   return false;
-}
-
-export function assertScanApiReady(config: PluginConfig): boolean {
-  return isScanApiConfigured(config);
 }

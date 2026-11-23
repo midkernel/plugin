@@ -165,16 +165,6 @@ export function authorizationServerMetadataDocument(appUrl: string): Record<stri
   };
 }
 
-export function protectedResourceMetadataDocument(appUrl: string): Record<string, unknown> {
-  const urls = midkernelAsUrls(appUrl);
-  return {
-    resource: urls.issuer,
-    authorization_servers: [urls.issuer],
-    scopes_supported: [...MIDKERNEL_AS_SCOPES],
-    bearer_methods_supported: ["header"],
-  };
-}
-
 export function authNotConfigured(detail?: string): AuthNotConfigured {
   return {
     ok: false,

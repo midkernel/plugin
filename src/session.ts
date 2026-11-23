@@ -30,12 +30,6 @@ export class SessionStore {
   setGithubInstallationToken(token: string | null): void {
     this.githubInstallationToken = token && token.trim() ? token.trim() : null;
   }
-
-  clear(): void {
-    this.selectedRepo = null;
-    this.accessToken = null;
-    this.githubInstallationToken = null;
-  }
 }
 
 export const session = new SessionStore();

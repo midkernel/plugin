@@ -59,7 +59,7 @@ function playbookIdFromPath(path: string): string {
   return stripPlaybookExtension(path);
 }
 
-export function isDefaultPlaybook(entry: Pick<PlaybookEntry, "id" | "name" | "path">): boolean {
+function isDefaultPlaybook(entry: Pick<PlaybookEntry, "id" | "name" | "path">): boolean {
   return (
     entry.id === DEFAULT_PLAYBOOK_ID ||
     entry.name === DEFAULT_PLAYBOOK_ID ||
