@@ -18,3 +18,10 @@ export const AUTH_NOT_CONFIGURED_MESSAGE =
 
 export const RUN_BACKEND_MESSAGE =
   "No Midkernel app run API is configured (set MIDKERNEL_APP_URL plus auth). Status and reports cannot be fetched; no findings are invented. Hosted Production Scan is live; local without auth fails closed.";
+
+export function describeError(error: unknown, options?: { timeoutMs: number }): string {
+  if (options && error instanceof Error && error.name === "TimeoutError") {
+    return `timed out after ${options.timeoutMs / 1000} s`;
+  }
+  return error instanceof Error ? error.message : String(error);
+}

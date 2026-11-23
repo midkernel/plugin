@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createAppClient, type AppClient } from "./app-client.js";
+import { createAppClient, type AppClient, type FetchRunSuccess } from "./app-client.js";
 import {
   hasAppAuth,
   hasAppUrl,
@@ -63,34 +63,6 @@ export type FetchRunFailure = {
   error: string;
   message: string;
   runId: string | null;
-};
-
-export type FetchRunSuccess = {
-  ok: true;
-  source: "midkernel-app";
-  runId: string;
-  status: string;
-  outcome: "succeeded" | "failed" | null;
-  startedAt: string | null;
-  finishedAt: string | null;
-  events: unknown[];
-  profile: ScanProfile | null;
-  threat: string | null;
-  playbook: { slug: string; name: string } | null;
-  project: { name: string; githubOwner: string; githubName: string } | null;
-  scan: {
-    id: string;
-    status: string;
-    summary: string | null;
-    findingsCount: number | null;
-  } | null;
-  report: {
-    summary: string;
-    text: string;
-    findingsCount: number | null;
-    model: string | null;
-  } | null;
-  credits: { meters: true };
 };
 
 export type ScanDeps = {

@@ -1,6 +1,6 @@
 import { createAppClient } from "./app-client.js";
-import { isScanApiConfigured, type FetchLike, type PluginConfig } from "./config.js";
-import { ErrorCode } from "./errors.js";
+import { APP_REQUEST_TIMEOUT_MS, isScanApiConfigured, type FetchLike, type PluginConfig } from "./config.js";
+import { describeError, ErrorCode } from "./errors.js";
 import { repoRefSchema } from "./schemas.js";
 import type { SessionStore } from "./session.js";
 import type { GitHubRepoRef, InstallationRepo } from "./types.js";
@@ -37,6 +37,8 @@ export type GitHubAppSelectResult = {
 
 export const GITHUB_APP_STUB_NOTE =
   "GitHub App listing is empty until Midkernel session tokens are available. The App is read-only. IT owns OAuth and scopes.";
+
+export const MAX_INSTALLATION_PAGES = 50;
 
 export const GITHUB_INSTALLATION_REPOS_URL =
   "https://api.github.com/installation/repositories?per_page=100";
@@ -104,7 +106,7 @@ export async function listGithubInstallationRepos(
     const repos: InstallationRepo[] = [];
     let url: string | null = GITHUB_INSTALLATION_REPOS_URL;
 
-    while (url) {
+    for (let page = 0; url && page < MAX_INSTALLATION_PAGES; page++) {
       const response = await fetchFn(url, {
         method: "GET",
         headers: {
@@ -113,6 +115,7 @@ export async function listGithubInstallationRepos(
           "X-GitHub-Api-Version": "2022-11-28",
           "User-Agent": "midkernel-plugin",
         },
+        signal: AbortSignal.timeout(APP_REQUEST_TIMEOUT_MS),
       });
       if (!response.ok) {
         return {
@@ -154,7 +157,7 @@ export async function listGithubInstallationRepos(
       note: "Repositories visible to the read-only GitHub App installation token on this session.",
     };
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
+    const reason = describeError(error, { timeoutMs: APP_REQUEST_TIMEOUT_MS });
     return {
       stubbed: false,
       mock: false,
@@ -213,5 +216,7 @@ export function selectRepoAgainstList(
 function nextLinkFromHeader(link: string | null): string | null {
   if (!link) return null;
   const match = link.match(/<([^>]+)>;\s*rel="next"/);
-  return match?.[1] ?? null;
+  if (!match?.[1]) return null;
+  const next = new URL(match[1]);
+  return next.origin === new URL(GITHUB_INSTALLATION_REPOS_URL).origin ? match[1] : null;
 }
