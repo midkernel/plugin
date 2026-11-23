@@ -1,5 +1,5 @@
 /**
- * HTTP client for midkernel/app Scan APIs (app PR #13).
+ * HTTP client for midkernel/app Scan APIs.
  *
  *   POST {MIDKERNEL_APP_URL}/api/scans/start
  *   GET  {MIDKERNEL_APP_URL}/api/runs/:id
@@ -13,7 +13,7 @@
 import { joinAppUrl, type FetchLike, type PluginConfig } from "./config.js";
 import { ErrorCode } from "./errors.js";
 import type { ScanProfile } from "./profiles.js";
-import type { GitHubRepoRef, InstallationRepo } from "./types.js";
+import type { InstallationRepo } from "./types.js";
 
 export const APP_PATHS = {
   startScan: "/api/scans/start",
@@ -477,10 +477,6 @@ function mapRepo(value: unknown): InstallationRepo | null {
     url: asString(record.url) ?? asString(record.html_url) ?? `https://github.com/${owner}/${name}`,
     defaultBranch: asString(record.defaultBranch) ?? asString(record.default_branch) ?? "main",
   };
-}
-
-export function repoRefEquals(left: GitHubRepoRef, right: GitHubRepoRef): boolean {
-  return left.owner.toLowerCase() === right.owner.toLowerCase() && left.name.toLowerCase() === right.name.toLowerCase();
 }
 
 function mapPlaybooksSuccess(body: unknown): ListPlaybooksSuccess | AppHttpError {

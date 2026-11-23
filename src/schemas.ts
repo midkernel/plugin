@@ -81,9 +81,4 @@ export const githubDirSchema = z.object({
   url: z.string().min(1),
 });
 
-export type GithubContentItem = z.infer<typeof githubContentItemSchema>;
 export type GithubContents = z.infer<typeof githubContentsSchema>;
-export type ConnectRepoInput = z.input<typeof connectRepoSchema>;
-export type StartRunInput = z.input<typeof startRunSchema>;
-export type FetchRunInput = z.input<typeof fetchRunSchema>;
-export type RepoRef = z.infer<typeof repoRefSchema>;

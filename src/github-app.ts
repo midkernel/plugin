@@ -5,8 +5,6 @@ import { repoRefSchema } from "./schemas.js";
 import type { SessionStore } from "./session.js";
 import type { GitHubRepoRef, InstallationRepo } from "./types.js";
 
-export type { GitHubRepoRef, InstallationRepo };
-
 /**
  * Read-only GitHub App listing.
  *
@@ -210,10 +208,6 @@ export function selectRepoAgainstList(
     verified: true,
     note: "Repository is visible to the read-only GitHub App installation.",
   };
-}
-
-export function parseOwnerName(owner: unknown, name: unknown): GitHubRepoRef {
-  return repoRefSchema.parse({ owner, name });
 }
 
 function nextLinkFromHeader(link: string | null): string | null {
